@@ -1,6 +1,6 @@
 // Small shared building blocks.
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 export function Card({ title, right, children, className = "" }: { title?: ReactNode; right?: ReactNode; children: ReactNode; className?: string }) {
   return (
@@ -54,6 +54,55 @@ export function Segmented<T extends string>({ value, options, onChange }: { valu
         </button>
       ))}
     </div>
+  );
+}
+
+// A numeric field that edits comfortably: the text buffer is local, so an
+// empty field stays empty while typing; the parent gets every valid value;
+// blur tidies the text. Focus selects all so a tap replaces the value.
+export function NumberField({ value, onChange, step = 1, min, className = "", ariaLabel }: { value: number; onChange: (v: number) => void; step?: number; min?: number; className?: string; ariaLabel?: string }) {
+  const [text, setText] = useState(String(value));
+  const [editing, setEditing] = useState(false);
+  useEffect(() => {
+    if (!editing) setText(String(value));
+  }, [value, editing]);
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      aria-label={ariaLabel}
+      value={text}
+      onFocus={(e) => {
+        setEditing(true);
+        const el = e.target;
+        requestAnimationFrame(() => el.select());
+      }}
+      onChange={(e) => {
+        const t = e.target.value;
+        setEditing(true);
+        setText(t);
+        const n = Number(t);
+        if (t.trim() !== "" && Number.isFinite(n) && (min === undefined || n >= min)) onChange(n);
+      }}
+      onBlur={() => {
+        setEditing(false);
+        const n = Number(text);
+        const ok = text.trim() !== "" && Number.isFinite(n) && (min === undefined || n >= min);
+        const v = ok ? n : (min ?? 0);
+        onChange(v);
+        setText(String(v));
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+          e.preventDefault();
+          const dir = e.key === "ArrowUp" ? 1 : -1;
+          const n = Math.max(min ?? -Infinity, Math.round((value + dir * step) * 1000) / 1000);
+          onChange(n);
+          setText(String(n));
+        }
+      }}
+      className={`chip num px-2 py-1 text-sm text-ink ${className}`}
+    />
   );
 }
 

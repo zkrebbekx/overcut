@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import type { AssetView, SeasonView } from "../api";
 import type { Chip, PlayerState, Risk } from "../store";
-import { Segmented, TeamEdge, money } from "./ui";
+import { NumberField, Segmented, TeamEdge, money } from "./ui";
 
 export function TeamBuilder({ season, state, update }: { season: SeasonView; state: PlayerState; update: (p: Partial<PlayerState>) => void }) {
   const [query, setQuery] = useState("");
@@ -76,11 +76,11 @@ export function TeamBuilder({ season, state, update }: { season: SeasonView; sta
       <div className="grid grid-cols-2 gap-3 text-xs">
         <label className="flex flex-col gap-1 text-ink-3">
           Free transfers
-          <input type="number" min={0} max={9} value={state.freeTransfers} onChange={(e) => update({ freeTransfers: Number(e.target.value) })} className="chip num px-2 py-1 text-sm text-ink" />
+          <NumberField ariaLabel="Free transfers" value={state.freeTransfers} min={0} onChange={(v) => update({ freeTransfers: Math.round(v) })} />
         </label>
         <label className="flex flex-col gap-1 text-ink-3">
           Cash in hand ($M)
-          <input type="number" step={0.1} value={state.cash} onChange={(e) => update({ cash: Number(e.target.value) })} className="chip num px-2 py-1 text-sm text-ink" />
+          <NumberField ariaLabel="Cash in hand in millions" value={state.cash} step={0.1} onChange={(v) => update({ cash: v })} />
         </label>
       </div>
 
