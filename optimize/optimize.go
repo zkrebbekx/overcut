@@ -27,10 +27,14 @@ type Options struct {
 	// DriverSlots and ConstructorSlots set the team shape.
 	DriverSlots      int
 	ConstructorSlots int
-	// CaptainMultiplier is the DRS-boost multiplier on the best driver.
-	// The default 2 doubles the captain. The 3x chip sets 3. Zero keeps
-	// the default.
-	CaptainMultiplier int
+	// BoostMultiplier is the regular Boost on the best driver. Zero means
+	// the default of 2.
+	BoostMultiplier int
+	// ExtraBoost applies the x3 chip: the best driver scores triple and
+	// the regular Boost moves to the second-best driver.
+	ExtraBoost bool
+	// ExtraBoostMultiplier is the chip multiplier. Zero means 3.
+	ExtraBoostMultiplier int
 	// CurrentTeam holds the asset IDs of the team now. When set, the
 	// optimizer charges the transfer penalty for changes beyond the free
 	// allowance.
@@ -53,11 +57,12 @@ type Options struct {
 type Team struct {
 	Drivers      []Asset
 	Constructors []Asset
-	CaptainID    string
+	CaptainID    string // the driver with the highest multiplier
+	BoostID      string // the driver with the regular Boost when the x3 chip is played
 
 	Cost      float64
-	RawPoints float64 // sum of asset points without captain or penalty
-	Captain   float64 // extra points from the captain multiplier
+	RawPoints float64 // sum of asset points without boosts or penalty
+	Captain   float64 // extra points from all boost multipliers
 	Transfers int     // changes from the current team
 	Penalty   float64 // transfer penalty (zero or negative)
 	Score     float64 // RawPoints + Captain + Penalty
@@ -68,8 +73,11 @@ func Best(assets []Asset, opt Options) []Team {
 	if opt.TopN <= 0 {
 		opt.TopN = 1
 	}
-	if opt.CaptainMultiplier == 0 {
-		opt.CaptainMultiplier = 2
+	if opt.BoostMultiplier == 0 {
+		opt.BoostMultiplier = 2
+	}
+	if opt.ExtraBoostMultiplier == 0 {
+		opt.ExtraBoostMultiplier = 3
 	}
 
 	var drivers, cons []Asset
@@ -98,20 +106,25 @@ func Best(assets []Asset, opt Options) []Team {
 		idx     []int
 		cost    float64
 		points  float64
-		best    float64 // best driver points, for the captain
-		keepers int     // members already on the current team
+		best    float64 // best driver points, for the top multiplier
+		second  float64 // second-best driver points, for the x3 chip
+		bestIdx int
+		secIdx  int
+		keepers int // members already on the current team
 	}
 	dAggs := make([]agg, 0, len(driverSets))
 	for _, set := range driverSets {
-		var a agg
-		a.idx = set
-		a.best = drivers[set[0]].Points
+		a := agg{idx: set, bestIdx: -1, secIdx: -1}
 		for _, i := range set {
 			d := drivers[i]
 			a.cost += d.Price
 			a.points += d.Points
-			if d.Points > a.best {
-				a.best = d.Points
+			switch {
+			case a.bestIdx < 0 || d.Points > a.best:
+				a.second, a.secIdx = a.best, a.bestIdx
+				a.best, a.bestIdx = d.Points, i
+			case a.secIdx < 0 || d.Points > a.second:
+				a.second, a.secIdx = d.Points, i
 			}
 			if current[d.ID] {
 				a.keepers++
@@ -135,7 +148,8 @@ func Best(assets []Asset, opt Options) []Team {
 	}
 
 	slots := opt.DriverSlots + opt.ConstructorSlots
-	captainX := float64(opt.CaptainMultiplier - 1)
+	boostX := float64(opt.BoostMultiplier - 1)
+	extraX := float64(opt.ExtraBoostMultiplier - 1)
 
 	var top []Team
 	worst := -1e18
@@ -147,7 +161,13 @@ func Best(assets []Asset, opt Options) []Team {
 				continue
 			}
 			raw := da.points + ca.points
-			captain := captainX * da.best
+			// The x3 chip triples the best driver; the regular Boost then
+			// doubles the second-best. Without the chip, the Boost doubles
+			// the best.
+			captain := boostX * da.best
+			if opt.ExtraBoost {
+				captain = extraX*da.best + boostX*da.second
+			}
 
 			transfers := 0
 			penalty := 0.0
@@ -175,9 +195,10 @@ func Best(assets []Asset, opt Options) []Team {
 			}
 			for _, i := range da.idx {
 				t.Drivers = append(t.Drivers, drivers[i])
-				if drivers[i].Points == da.best && t.CaptainID == "" {
-					t.CaptainID = drivers[i].ID
-				}
+			}
+			t.CaptainID = drivers[da.bestIdx].ID
+			if opt.ExtraBoost && da.secIdx >= 0 {
+				t.BoostID = drivers[da.secIdx].ID
 			}
 			for _, i := range ca.idx {
 				t.Constructors = append(t.Constructors, cons[i])

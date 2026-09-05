@@ -174,20 +174,34 @@ func Fit(d dataset.Data, cfg rules.Config, throughRound int) Model {
 		dm.FLProb = shrunkRate(fls, races, 1.0/22.0, 4)
 		dm.Rounds = int(races)
 
-		// Overtake and DOTD components come from the official feed.
-		overtakes := componentDiff(a.History, func(h dataset.AssetRound) float64 { return h.Stats.OvertakingPts })
+		// Overtake points per weekend are exact: the official race and
+		// sprint points minus what the rules derive from the
+		// classifications alone. The feed's cumulative overtake stat lags
+		// by a round, so the residual is the reliable source. The
+		// driver-of-the-day award comes from the feed stat; its timing
+		// does not matter for a season count.
 		dotd := componentDiff(a.History, func(h dataset.AssetRound) float64 { return h.Stats.DOTDPts })
 		var oVals []float64
 		var oAges []int
 		dotdCount := 0.0
 		for _, r := range completed {
-			if v, ok := overtakes[r.Round]; ok {
-				oVals = append(oVals, math.Max(v, 0))
-				oAges = append(oAges, latest-r.Round)
-			}
 			if v, ok := dotd[r.Round]; ok && v > 0 {
 				dotdCount++
 			}
+			official, ok := a.RoundHistory(r.Round)
+			if !ok {
+				continue
+			}
+			row, ok := r.Race[a.TLA]
+			if !ok {
+				continue
+			}
+			w := weekendFromResults(r, a.TLA, row)
+			w.DOTD = dotd[r.Round] > 0
+			base := cfg.DriverPoints(w) - cfg.DriverPoints(rules.DriverWeekend{QualiPos: w.QualiPos})
+			resid := official.RacePts + official.SprintPts - float64(base)
+			oVals = append(oVals, math.Max(resid, 0))
+			oAges = append(oAges, latest-r.Round)
 		}
 		lambda, _, _ := ewma(oVals, oAges, 0)
 		dm.OvertakeLambda = math.Max(lambda, 0)
@@ -207,6 +221,34 @@ func Fit(d dataset.Data, cfg rules.Config, throughRound int) Model {
 	}
 
 	return m
+}
+
+// weekendFromResults builds a rules.DriverWeekend from the classifications
+// of one round, without overtakes or the driver-of-the-day award.
+func weekendFromResults(r dataset.Round, tla string, row dataset.RaceRow) rules.DriverWeekend {
+	w := rules.DriverWeekend{
+		QualiPos:   r.Quali[tla],
+		GridPos:    row.Grid,
+		FinishPos:  row.Pos,
+		DNF:        row.DNF,
+		FastestLap: row.FastestLap,
+	}
+	if row.Grid == 0 {
+		// A pit-lane start counts as a slot behind the last car.
+		w.GridPos = len(r.Race) + 1
+	}
+	if r.HasSprint {
+		if s, ok := r.Sprint[tla]; ok {
+			w.HasSprint = true
+			w.SprintGrid = s.Grid
+			w.SprintPos = s.Pos
+			w.SprintDNF = s.DNF
+			if s.Grid == 0 {
+				w.SprintGrid = len(r.Sprint) + 1
+			}
+		}
+	}
+	return w
 }
 
 // fieldDNFRate returns the mean retirement rate per car per race, shrunk

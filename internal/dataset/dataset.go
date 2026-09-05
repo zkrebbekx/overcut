@@ -77,10 +77,9 @@ type AssetRound struct {
 	Ownership float64 `json:"ownership"`
 	Points    float64 `json:"points"`
 
-	QualiPts       float64 `json:"quali_pts"`
-	SprintQualiPts float64 `json:"sprint_quali_pts"`
-	SprintPts      float64 `json:"sprint_pts"`
-	RacePts        float64 `json:"race_pts"`
+	QualiPts  float64 `json:"quali_pts"`
+	SprintPts float64 `json:"sprint_pts"`
+	RacePts   float64 `json:"race_pts"`
 
 	Stats feed.AdditionalStats `json:"stats"`
 }
@@ -233,14 +232,15 @@ func Sync(season int) (Data, error) {
 				Points:    p.GamedayPoints(),
 				Stats:     p.Stats,
 			}
+			// The feed labels the sprint-race session "Sprint Qualifying".
+			// Sprint qualifying itself scores nothing, so both labels sum
+			// into the sprint leg.
 			for _, s := range p.Sessions {
 				switch s.SessionType {
 				case "Qualifying":
 					ar.QualiPts = s.Points
-				case "Sprint Qualifying":
-					ar.SprintQualiPts = s.Points
-				case "Sprint":
-					ar.SprintPts = s.Points
+				case "Sprint Qualifying", "Sprint":
+					ar.SprintPts += s.Points
 				case "Race":
 					ar.RacePts = s.Points
 				}

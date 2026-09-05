@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0d10;
+  --color-panel: #14171c;
+  --color-raised: #1b1f26;
+  --color-line: #262b33;
+  --color-ink: #f2f4f7;
+  --color-ink-2: #a7afbc;
+  --color-ink-3: #6b7280;
+  --color-accent: #3ed0ff;
+  --color-accent-dim: #1d6f8a;
+  --color-gain: #22b37e;
+  --color-loss: #e66767;
+  --color-warn: #fbbf24;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-card: 10px;
+  --radius-chip: 6px;
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.card {
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* A single-column grid must track the container, not the widest row,
+   otherwise tables and chip rows push the page wider than a phone.
+   Responsive grid-cols utilities override this at larger widths. */
+@layer base {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .grid > * {
+    min-width: 0;
+  }
+}
+
+.chip {
+  border-radius: var(--radius-chip);
+  border: 1px solid var(--color-line);
+  background: var(--color-raised);
+}
+
+.fade-in {
+  animation: fade 120ms ease-out;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #2b313b;
+  border-radius: 8px;
+}

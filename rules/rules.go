@@ -35,14 +35,36 @@ type Config struct {
 	// RaceDNF is the penalty for a DNF, NC, or DSQ in the race.
 	RaceDNF int `json:"race_dnf"`
 
-	// SprintPoints maps a sprint finish position to points.
+	// SprintPoints maps a sprint finish position to points. Sprint
+	// qualifying scores no points.
 	SprintPoints []int `json:"sprint_points"`
-	// SprintQualiPoints maps a sprint-qualifying position to points.
-	SprintQualiPoints []int `json:"sprint_quali_points"`
+	// SprintMaxLost caps the positions lost in the sprint.
+	SprintMaxLost int `json:"sprint_max_lost"`
 	// SprintFastestLap is the bonus for the fastest sprint lap.
 	SprintFastestLap int `json:"sprint_fastest_lap"`
 	// SprintDNF is the penalty for a DNF in the sprint.
 	SprintDNF int `json:"sprint_dnf"`
+
+	// ConstructorDSQ holds the extra constructor penalty per disqualified
+	// driver, by session.
+	ConstructorDSQ SessionPenalty `json:"constructor_dsq"`
+	// PitStopPoints maps an upper time bound in seconds to points for the
+	// constructor's pit stop. The first band whose bound exceeds the time
+	// applies.
+	PitStopPoints []PitStopBand `json:"pit_stop_points"`
+	// FastestPitStop is the bonus for the fastest stop of the race.
+	FastestPitStop int `json:"fastest_pit_stop"`
+	// RecordPitStop is the bonus for a new world-record stop.
+	RecordPitStop int `json:"record_pit_stop"`
+	// RecordPitStopTime is the record to beat, in seconds.
+	RecordPitStopTime float64 `json:"record_pit_stop_time"`
+
+	// PriceFloor and PriceCap bound every asset price, in millions.
+	PriceFloor float64 `json:"price_floor"`
+	PriceCap   float64 `json:"price_cap"`
+	// PriceFormRounds is the count of grands prix whose average fantasy
+	// performance drives a price change.
+	PriceFormRounds int `json:"price_form_rounds"`
 
 	// ConstructorQualiBonus holds the progression bonuses, keyed by the
 	// count of the team's drivers that reach Q2 and Q3.
@@ -58,12 +80,34 @@ type Config struct {
 	TransferPenalty int `json:"transfer_penalty"`
 	// FreeTransfers is the free transfer allowance per race week.
 	FreeTransfers int `json:"free_transfers"`
+	// MaxCarryOver is the most unused transfers that carry to the next
+	// race. A carried transfer does not accumulate further.
+	MaxCarryOver int `json:"max_carry_over"`
+	// BoostMultiplier is the regular Boost on one driver, every race.
+	BoostMultiplier int `json:"boost_multiplier"`
+	// ExtraBoostMultiplier is the x3 chip multiplier. The chip goes on a
+	// second driver; the regular Boost stays on another.
+	ExtraBoostMultiplier int `json:"extra_boost_multiplier"`
 	// Budget is the team budget in millions.
 	Budget float64 `json:"budget"`
 	// TeamDrivers is the required driver count.
 	TeamDrivers int `json:"team_drivers"`
 	// TeamConstructors is the required constructor count.
 	TeamConstructors int `json:"team_constructors"`
+}
+
+// SessionPenalty holds one penalty value per session type.
+type SessionPenalty struct {
+	Quali  int `json:"quali"`
+	Sprint int `json:"sprint"`
+	Race   int `json:"race"`
+}
+
+// PitStopBand is one row of the pit-stop table: stops faster than
+// UnderSeconds score Points, unless a faster band applies.
+type PitStopBand struct {
+	UnderSeconds float64 `json:"under_seconds"`
+	Points       int     `json:"points"`
 }
 
 // QualiBonus holds the constructor qualifying progression bonuses.
@@ -89,10 +133,25 @@ func Default() Config {
 		DriverOfTheDay: 10,
 		RaceDNF:        -20,
 
-		SprintPoints:      []int{8, 7, 6, 5, 4, 3, 2, 1},
-		SprintQualiPoints: []int{8, 7, 6, 5, 4, 3, 2, 1},
-		SprintFastestLap:  5,
-		SprintDNF:         -10,
+		SprintPoints:     []int{8, 7, 6, 5, 4, 3, 2, 1},
+		SprintMaxLost:    10,
+		SprintFastestLap: 5,
+		SprintDNF:        -10,
+
+		ConstructorDSQ: SessionPenalty{Quali: -5, Sprint: -10, Race: -20},
+		PitStopPoints: []PitStopBand{
+			{UnderSeconds: 2.00, Points: 20},
+			{UnderSeconds: 2.20, Points: 10},
+			{UnderSeconds: 2.50, Points: 5},
+			{UnderSeconds: 3.00, Points: 2},
+		},
+		FastestPitStop:    5,
+		RecordPitStop:     15,
+		RecordPitStopTime: 1.80,
+
+		PriceFloor:      3.0,
+		PriceCap:        34.0,
+		PriceFormRounds: 3,
 
 		ConstructorQualiBonus: QualiBonus{
 			NoneInQ2: -1,
@@ -104,11 +163,14 @@ func Default() Config {
 		Q2Cutoff: 16,
 		Q3Cutoff: 10,
 
-		TransferPenalty:  -10,
-		FreeTransfers:    2,
-		Budget:           100.0,
-		TeamDrivers:      5,
-		TeamConstructors: 2,
+		TransferPenalty:      -10,
+		FreeTransfers:        2,
+		MaxCarryOver:         1,
+		BoostMultiplier:      2,
+		ExtraBoostMultiplier: 3,
+		Budget:               100.0,
+		TeamDrivers:          5,
+		TeamConstructors:     2,
 	}
 }
 
@@ -129,18 +191,23 @@ func Load(path string) (Config, error) {
 // DriverWeekend describes one driver's simulated or actual results for one
 // race weekend.
 type DriverWeekend struct {
-	QualiPos    int  // 1-based final qualifying classification; 0 = no time
-	GridPos     int  // 1-based race grid slot
-	FinishPos   int  // 1-based race classification; ignored when DNF
-	DNF         bool // DNF, NC, or DSQ in the race
-	Overtakes   int  // on-track overtakes in the race
-	FastestLap  bool
-	DOTD        bool
+	QualiPos  int  // 1-based final qualifying classification; 0 = no time
+	QualiDSQ  bool // disqualified from qualifying
+	GridPos   int  // 1-based official starting grid slot
+	FinishPos int  // 1-based race classification; ignored when DNF
+	DNF       bool // DNF, NC, or DSQ in the race
+	RaceDSQ   bool // disqualified from the race (a DNF for the driver)
+	// Overtakes counts on-track overtakes in the race. They score even
+	// when the driver retires later.
+	Overtakes  int
+	FastestLap bool
+	DOTD       bool
+
 	HasSprint   bool
-	SprintQPos  int // 1-based sprint-qualifying position; 0 = none
 	SprintGrid  int // 1-based sprint grid slot
 	SprintPos   int // 1-based sprint classification; ignored when SprintDNF
 	SprintDNF   bool
+	SprintDSQ   bool
 	SprintOvers int // on-track overtakes in the sprint
 	SprintFL    bool
 }
@@ -159,16 +226,18 @@ func (c Config) DriverPoints(w DriverWeekend) int {
 	pts := 0
 
 	// Qualifying.
-	if w.QualiPos == 0 {
+	if w.QualiPos == 0 || w.QualiDSQ {
 		pts += c.QualiNoTime
 	} else {
 		pts += positional(c.QualiPoints, w.QualiPos)
 	}
 
-	// Sprint.
+	// Sprint. Sprint qualifying scores nothing. Overtakes score even when
+	// the driver retires. An unclassified driver takes the penalty and no
+	// position points.
 	if w.HasSprint {
-		pts += positional(c.SprintQualiPoints, w.SprintQPos)
-		if w.SprintDNF {
+		pts += w.SprintOvers * c.Overtake
+		if w.SprintDNF || w.SprintDSQ {
 			pts += c.SprintDNF
 		} else {
 			pts += positional(c.SprintPoints, w.SprintPos)
@@ -176,17 +245,21 @@ func (c Config) DriverPoints(w DriverWeekend) int {
 			if delta > 0 {
 				pts += delta * c.PositionGained
 			} else {
-				pts += -delta * c.PositionLost
+				lost := -delta
+				if lost > c.SprintMaxLost {
+					lost = c.SprintMaxLost
+				}
+				pts += lost * c.PositionLost
 			}
-			pts += w.SprintOvers * c.Overtake
 			if w.SprintFL {
 				pts += c.SprintFastestLap
 			}
 		}
 	}
 
-	// Race.
-	if w.DNF {
+	// Race. Same structure; positions lost are not capped.
+	pts += w.Overtakes * c.Overtake
+	if w.DNF || w.RaceDSQ {
 		pts += c.RaceDNF
 	} else {
 		pts += positional(c.RacePoints, w.FinishPos)
@@ -196,7 +269,6 @@ func (c Config) DriverPoints(w DriverWeekend) int {
 		} else {
 			pts += -delta * c.PositionLost
 		}
-		pts += w.Overtakes * c.Overtake
 		if w.FastestLap {
 			pts += c.FastestLap
 		}
@@ -206,6 +278,17 @@ func (c Config) DriverPoints(w DriverWeekend) int {
 	}
 
 	return pts
+}
+
+// PitStopPointsFor returns the points for a constructor's pit stop of the
+// given duration in seconds.
+func (c Config) PitStopPointsFor(seconds float64) int {
+	for _, band := range c.PitStopPoints {
+		if seconds < band.UnderSeconds {
+			return band.Points
+		}
+	}
+	return 0
 }
 
 // ConstructorQualiBonusFor computes the progression bonus from the count of
@@ -227,7 +310,9 @@ func (c Config) ConstructorQualiBonusFor(inQ2, inQ3 int) int {
 }
 
 // ConstructorPoints computes one constructor's fantasy points for one
-// weekend from its two drivers' weekends plus a pit-stop component.
+// weekend: the combined total of its two drivers (without the
+// driver-of-the-day bonus), the qualifying progression bonus, the extra
+// disqualification penalties, plus a pit-stop component.
 //
 // The pit-stop component is not derivable from public timing data. The
 // caller supplies it; the model package estimates it from the residual
@@ -242,6 +327,15 @@ func (c Config) ConstructorPoints(a, b DriverWeekend, pitStopPts int) int {
 		}
 		if w.QualiPos >= 1 && w.QualiPos <= c.Q3Cutoff {
 			inQ3++
+		}
+		if w.QualiDSQ {
+			pts += c.ConstructorDSQ.Quali
+		}
+		if w.HasSprint && w.SprintDSQ {
+			pts += c.ConstructorDSQ.Sprint
+		}
+		if w.RaceDSQ {
+			pts += c.ConstructorDSQ.Race
 		}
 	}
 	pts += c.ConstructorQualiBonusFor(inQ2, inQ3)

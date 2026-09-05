@@ -1,2 +1,6 @@
 /data/
-overcut
+/overcut
+node_modules/
+web/app/dist/
+*.log
+.DS_Store

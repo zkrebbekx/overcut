@@ -37,8 +37,9 @@ func TestBest(t *testing.T) {
 				So(teams, ShouldHaveLength, 1)
 				t := teams[0]
 				So(t.RawPoints, ShouldEqual, (16+18+20+22+24)+(30+35))
-				Convey("And the captain doubles the best driver", func() {
+				Convey("And the Boost doubles the best driver", func() {
 					So(t.CaptainID, ShouldEqual, "d7")
+					So(t.BoostID, ShouldBeEmpty)
 					So(t.Captain, ShouldEqual, 24)
 					So(t.Score, ShouldEqual, t.RawPoints+24)
 				})
@@ -97,13 +98,15 @@ func TestBest(t *testing.T) {
 			})
 		})
 
-		Convey("When the 3x captain chip is set", func() {
+		Convey("When the x3 chip is played", func() {
 			teams := Best(assets, Options{
 				Budget: 1000, DriverSlots: 5, ConstructorSlots: 2, TopN: 1,
-				CaptainMultiplier: 3,
+				ExtraBoost: true,
 			})
-			Convey("Then the captain bonus doubles the extra", func() {
-				So(teams[0].Captain, ShouldEqual, 48)
+			Convey("Then the best driver scores triple and the regular Boost doubles the second-best", func() {
+				So(teams[0].Captain, ShouldEqual, 2*24+22)
+				So(teams[0].CaptainID, ShouldEqual, "d7")
+				So(teams[0].BoostID, ShouldEqual, "d6")
 			})
 		})
 

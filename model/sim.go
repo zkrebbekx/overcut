@@ -39,13 +39,91 @@ func (s SimResult) ByID(id string) (Projection, bool) {
 	return *p, true
 }
 
+// Conditions holds what is already known about the weekend at simulation
+// time. Every field is optional. Keys are driver TLAs.
+type Conditions struct {
+	// Quali is the actual qualifying classification (1-based). When set,
+	// the model does not sample qualifying.
+	Quali map[string]int
+	// Grid is the actual starting grid after penalties (1-based). When
+	// unset, the grid follows the qualifying order with BackOfGrid
+	// drivers moved to the back.
+	Grid map[string]int
+	// BackOfGrid lists drivers that start from the back of the grid.
+	BackOfGrid []string
+	// Practice is a practice classification (1-based), used as a pace
+	// prior when qualifying is unknown. Half the weight goes to practice
+	// and half to season form.
+	Practice map[string]int
+}
+
+// GridInfluence is the weight of the grid slot in the race finish score.
+// The remainder of the weight goes to season race pace.
+const GridInfluence = 0.35
+
 // Simulate runs a Monte Carlo simulation of one round and returns the
 // fantasy-point distribution per asset. The same seed gives the same
 // result.
 func (m Model) Simulate(round int, hasSprint bool, sims int, seed uint64) SimResult {
+	return m.SimulateWith(round, hasSprint, sims, seed, Conditions{})
+}
+
+// SimulateWith runs Simulate with known weekend conditions.
+func (m Model) SimulateWith(round int, hasSprint bool, sims int, seed uint64, cond Conditions) SimResult {
 	rng := rand.New(rand.NewPCG(seed, uint64(round)))
 
 	n := len(m.Drivers)
+
+	// Apply the practice prior to the pace estimates.
+	drivers := append([]DriverModel(nil), m.Drivers...)
+	if len(cond.Practice) > 0 {
+		for i := range drivers {
+			if p, ok := cond.Practice[drivers[i].TLA]; ok && p > 0 {
+				drivers[i].QualiMu = 0.5*drivers[i].QualiMu + 0.5*float64(p)
+				drivers[i].RaceMu = 0.5*drivers[i].RaceMu + 0.5*float64(p)
+			}
+		}
+	}
+	m.Drivers = drivers
+
+	back := map[string]bool{}
+	for _, tla := range cond.BackOfGrid {
+		back[tla] = true
+	}
+
+	// fixedGrid resolves the starting grid from the known conditions
+	// given a qualifying order, or returns nil when nothing is known.
+	fixedGrid := func(qualiPos []int) []int {
+		if len(cond.Grid) == 0 && len(back) == 0 {
+			return nil
+		}
+		grid := make([]int, n)
+		if len(cond.Grid) > 0 {
+			for i, dm := range m.Drivers {
+				if g, ok := cond.Grid[dm.TLA]; ok && g > 0 {
+					grid[i] = g
+				} else {
+					grid[i] = qualiPos[i]
+				}
+			}
+			return grid
+		}
+		// Move the penalized drivers behind the rest, in qualifying order.
+		type slot struct{ idx, key int }
+		slots := make([]slot, n)
+		for i, dm := range m.Drivers {
+			key := qualiPos[i]
+			if back[dm.TLA] {
+				key += 100
+			}
+			slots[i] = slot{i, key}
+		}
+		sort.Slice(slots, func(a, b int) bool { return slots[a].key < slots[b].key })
+		for p, s := range slots {
+			grid[s.idx] = p + 1
+		}
+		return grid
+	}
 	samples := map[string][]float64{}
 	for _, dm := range m.Drivers {
 		samples[dm.AssetID] = make([]float64, 0, sims)
@@ -75,18 +153,33 @@ func (m Model) Simulate(round int, hasSprint bool, sims int, seed uint64) SimRes
 	weekends := make([]rules.DriverWeekend, n)
 
 	for s := 0; s < sims; s++ {
-		// Qualifying: sample a pace score per driver and rank.
-		for i, dm := range m.Drivers {
-			scores[i] = dm.QualiMu + rng.NormFloat64()*dm.QualiSD
+		// Qualifying: use the known classification, or sample a pace score
+		// per driver and rank.
+		var qualiPos []int
+		if len(cond.Quali) > 0 {
+			qualiPos = make([]int, n)
+			for i, dm := range m.Drivers {
+				qualiPos[i] = cond.Quali[dm.TLA]
+			}
+		} else {
+			for i, dm := range m.Drivers {
+				scores[i] = dm.QualiMu + rng.NormFloat64()*dm.QualiSD
+			}
+			qualiPos = rank(scores)
 		}
-		qualiPos := rank(scores)
+		gridPos := fixedGrid(qualiPos)
+		if gridPos == nil {
+			gridPos = qualiPos
+		}
 
 		// Race: sample retirements, then rank the classified cars by a
-		// race-pace score. A retired car takes no classified position.
+		// race-pace score that blends season pace with the grid slot. A
+		// retired car takes no classified position.
 		dnf := make([]bool, n)
 		for i, dm := range m.Drivers {
 			dnf[i] = rng.Float64() < dm.DNFProb
-			scores[i] = dm.RaceMu + rng.NormFloat64()*dm.RaceSD
+			pace := (1-GridInfluence)*dm.RaceMu + GridInfluence*float64(gridPos[i])
+			scores[i] = pace + rng.NormFloat64()*dm.RaceSD
 			if dnf[i] {
 				scores[i] += 1000 // rank retired cars last
 			}
@@ -122,7 +215,7 @@ func (m Model) Simulate(round int, hasSprint bool, sims int, seed uint64) SimRes
 		for i, dm := range m.Drivers {
 			w := rules.DriverWeekend{
 				QualiPos:  qualiPos[i],
-				GridPos:   qualiPos[i],
+				GridPos:   gridPos[i],
 				FinishPos: racePos[i],
 				DNF:       dnf[i],
 				// Overtake points come from the fitted per-weekend rate.
@@ -135,7 +228,6 @@ func (m Model) Simulate(round int, hasSprint bool, sims int, seed uint64) SimRes
 			}
 			if hasSprint {
 				w.HasSprint = true
-				w.SprintQPos = sqPos[i]
 				w.SprintGrid = sqPos[i]
 				w.SprintPos = sprintPos[i]
 				w.SprintDNF = sprintDNF[i]
