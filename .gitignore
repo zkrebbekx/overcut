@@ -1,6 +1,9 @@
-/data/
 /overcut
 node_modules/
 web/app/dist/
+web/site/
+web/app/public/overcut.wasm
+web/app/public/wasm_exec.js
+web/app/public/data/
 *.log
 .DS_Store

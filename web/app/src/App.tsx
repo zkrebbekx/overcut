@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, BarChart3, BookOpen, Crosshair, History, RefreshCw, TrendingUp } from "lucide-react";
-import { api, type Conditions, type SeasonView } from "./api";
+import { api, isStatic, type Conditions, type SeasonView } from "./api";
 import { usePlayerState, type PlayerState } from "./store";
 import { DecideView } from "./views/Decide";
 import { ProjectionsView } from "./views/Projections";
@@ -53,6 +53,7 @@ export default function App() {
   const knows = describeKnowledge(state.conditions);
 
   async function sync() {
+    if (!api.sync) return;
     setSyncing(true);
     try {
       setSeason(await api.sync());
@@ -115,15 +116,21 @@ export default function App() {
           <span className={`chip px-2 py-1 text-xs ${knows.tone === "warn" ? "text-warn" : "text-gain"}`} title={knows.detail}>
             {knows.label}
           </span>
-          <button onClick={sync} disabled={syncing} className="chip ml-auto flex items-center gap-2 px-3 py-1 text-xs text-ink-2 hover:text-ink disabled:opacity-50">
-            <RefreshCw size={12} className={syncing ? "animate-spin" : ""} />
-            {syncing ? "Syncing…" : "Sync data"}
-          </button>
+          {isStatic ? (
+            <span className="ml-auto text-xs text-ink-3" title="Runs entirely in your browser. Data refreshes automatically after each session.">
+              {season ? `Data ${new Date(season.synced_at).toLocaleDateString()}` : ""}
+            </span>
+          ) : (
+            <button onClick={sync} disabled={syncing} className="chip ml-auto flex items-center gap-2 px-3 py-1 text-xs text-ink-2 hover:text-ink disabled:opacity-50">
+              <RefreshCw size={12} className={syncing ? "animate-spin" : ""} />
+              {syncing ? "Syncing…" : "Sync data"}
+            </button>
+          )}
         </header>
 
         <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-24 md:p-6 md:pb-6">
           {error && <ErrorBox error={error} />}
-          {!season && !error && <Spinner label="Loading season…" />}
+          {!season && !error && <Spinner label={isStatic ? "Starting the engine in your browser…" : "Loading season…"} />}
           {season && round && (
             <div key={tab} className="fade-in">
               {tab === "decide" && <DecideView season={season} round={round} state={state} update={update} />}

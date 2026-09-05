@@ -46,13 +46,30 @@ walk-forward on 318 real price moves.
 The scoring engine reproduces the official qualifying points exactly on
 262 of 262 driver-rounds of the 2026 season.
 
-## Install
+## Use it in the browser
+
+**https://zkrebbekx.github.io/overcut/**
+
+The hosted site runs the same Go engine compiled to WebAssembly, inside a
+Web Worker. Nothing leaves your browser. A scheduled workflow refreshes
+the season data every six hours and redeploys.
+
+## Install locally
 
 ```bash
 go install github.com/zkrebbekx/overcut/cmd/overcut@latest
 overcut sync          # download the season from public sources
 overcut serve         # open http://127.0.0.1:8080
 ```
+
+## Data store
+
+The whole season lives in one portable file, `data/season2026.json`
+(about 20 KB compressed). It holds the calendar, every qualifying,
+sprint, and race classification, and every asset's per-gameday price,
+ownership, and official points by session. The file is committed, so a
+clone works offline and the history of the data is the git history.
+`overcut sync` regenerates it from the public sources.
 
 ## CLI
 

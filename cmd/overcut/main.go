@@ -16,6 +16,7 @@ import (
 
 	"github.com/zkrebbekx/overcut/backtest"
 	"github.com/zkrebbekx/overcut/internal/dataset"
+	"github.com/zkrebbekx/overcut/internal/engine"
 	"github.com/zkrebbekx/overcut/internal/server"
 	"github.com/zkrebbekx/overcut/model"
 	"github.com/zkrebbekx/overcut/optimize"
@@ -485,7 +486,7 @@ func cmdServe(args []string) error {
 	if err != nil {
 		return err
 	}
-	srv := server.New(d, c.dataPath(), cfg, web.FS())
+	srv := server.New(engine.New(d, cfg), c.dataPath(), web.FS())
 	fmt.Printf("overcut serving on http://%s\n", *addr)
 	return http.ListenAndServe(*addr, srv.Handler())
 }

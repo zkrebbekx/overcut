@@ -1,0 +1,36 @@
+name: sync
+
+# Refresh the season data from the public sources and commit the change.
+# A commit on main triggers the pages workflow, so the site stays current.
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Sync
+        run: go run ./cmd/overcut sync -data data/season2026.json
+      - name: Commit if changed
+        run: |
+          # The synced_at stamp changes every run; only commit when the
+          # results, prices, or points moved.
+          if git diff --quiet -I '"synced_at"' -- data/season2026.json; then
+            echo "no data change"
+            exit 0
+          fi
+          git config user.name "overcut-sync"
+          git config user.email "overcut-sync@users.noreply.github.com"
+          git add data/season2026.json
+          git commit -m "data: sync season"
+          git push

@@ -175,45 +175,6 @@ export interface HindsightView {
 
 export type RulesView = Record<string, unknown>;
 
-async function get<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? `${res.status} ${res.statusText}`);
-  }
-  return res.json();
-}
-
-async function post<T>(url: string, body: unknown): Promise<T> {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const b = await res.json().catch(() => ({}));
-    throw new Error(b.error ?? `${res.status} ${res.statusText}`);
-  }
-  return res.json();
-}
-
-function condQuery(c: Conditions): string {
-  const p = new URLSearchParams();
-  if (c.quali?.length) p.set("quali", c.quali.join(","));
-  if (c.grid?.length) p.set("grid", c.grid.join(","));
-  if (c.back?.length) p.set("back", c.back.join(","));
-  if (c.fp3?.length) p.set("fp3", c.fp3.join(","));
-  return p.toString();
-}
-
-export const api = {
-  season: () => get<SeasonView>("/api/season"),
-  rules: () => get<RulesView>("/api/rules"),
-  project: (round: number, sims: number, cond: Conditions) =>
-    get<ProjectionView>(`/api/project?round=${round}&sims=${sims}&${condQuery(cond)}`),
-  optimize: (input: OptimizeInput) => post<OptimizeView>("/api/optimize", input),
-  prices: () => get<PricesView>("/api/prices"),
-  backtest: (sims = 3000) => get<BacktestReport>(`/api/backtest?sims=${sims}`),
-  hindsight: (round: number, top = 5) => get<HindsightView>(`/api/hindsight?round=${round}&top=${top}`),
-  sync: () => post<SeasonView>("/api/sync", {}),
-};
+// The concrete backend (HTTP API or in-browser WebAssembly) is chosen at
+// build time; see backend.ts.
+export { backend as api, isStatic } from "./backend";
