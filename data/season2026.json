@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "synced_at": "2026-09-05T18:27:36.71067672Z",
+ "synced_at": "2026-09-05T22:14:15.821139Z",
  "rounds": [
   {
    "round": 1,
@@ -2704,7 +2704,7 @@
      "old_price": 13,
      "ownership": 20,
      "points": 10,
-     "quali_pts": 0,
+     "quali_pts": 10,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -3013,7 +3013,7 @@
      "old_price": 11.2,
      "ownership": 20,
      "points": 3,
-     "quali_pts": 0,
+     "quali_pts": 3,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -5176,7 +5176,7 @@
      "old_price": 23.9,
      "ownership": 28,
      "points": 7,
-     "quali_pts": 0,
+     "quali_pts": 7,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -5485,7 +5485,7 @@
      "old_price": 25,
      "ownership": 19,
      "points": 6,
-     "quali_pts": 0,
+     "quali_pts": 6,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -6412,7 +6412,7 @@
      "old_price": 26.1,
      "ownership": 9,
      "points": 2,
-     "quali_pts": 0,
+     "quali_pts": 2,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -6721,7 +6721,7 @@
      "old_price": 24.4,
      "ownership": 9,
      "points": 8,
-     "quali_pts": 0,
+     "quali_pts": 8,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -7028,9 +7028,9 @@
      "active": true,
      "price": 27.6,
      "old_price": 27.9,
-     "ownership": 22,
+     "ownership": 23,
      "points": 9,
-     "quali_pts": 0,
+     "quali_pts": 9,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -7339,7 +7339,7 @@
      "old_price": 25.7,
      "ownership": 36,
      "points": 4,
-     "quali_pts": 0,
+     "quali_pts": 4,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -7957,7 +7957,7 @@
      "old_price": 8,
      "ownership": 45,
      "points": 1,
-     "quali_pts": 0,
+     "quali_pts": 1,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -8266,7 +8266,7 @@
      "old_price": 27.6,
      "ownership": 17,
      "points": 5,
-     "quali_pts": 0,
+     "quali_pts": 5,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -9217,7 +9217,7 @@
    "name": "Mercedes",
    "tla": "MER",
    "team_id": "28",
-   "team_name": "",
+   "team_name": "Mercedes",
    "history": [
     {
      "gameday": 1,
@@ -9502,7 +9502,7 @@
      "old_price": 32.6,
      "ownership": 35,
      "points": 23,
-     "quali_pts": 0,
+     "quali_pts": 23,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -9526,7 +9526,7 @@
    "name": "McLaren",
    "tla": "MCL",
    "team_id": "27",
-   "team_name": "",
+   "team_name": "McLaren",
    "history": [
     {
      "gameday": 1,
@@ -9809,9 +9809,9 @@
      "active": true,
      "price": 31.3,
      "old_price": 31,
-     "ownership": 11,
+     "ownership": 10,
      "points": 20,
-     "quali_pts": 0,
+     "quali_pts": 20,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -9835,7 +9835,7 @@
    "name": "Red Bull Racing",
    "tla": "RBR",
    "team_id": "29",
-   "team_name": "",
+   "team_name": "Red Bull Racing",
    "history": [
     {
      "gameday": 1,
@@ -10120,7 +10120,7 @@
      "old_price": 30.9,
      "ownership": 7,
      "points": 10,
-     "quali_pts": 0,
+     "quali_pts": 10,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -10144,7 +10144,7 @@
    "name": "Ferrari",
    "tla": "FER",
    "team_id": "25",
-   "team_name": "",
+   "team_name": "Ferrari",
    "history": [
     {
      "gameday": 1,
@@ -10427,9 +10427,9 @@
      "active": true,
      "price": 26.9,
      "old_price": 26.6,
-     "ownership": 42,
+     "ownership": 43,
      "points": 23,
-     "quali_pts": 0,
+     "quali_pts": 23,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -10453,7 +10453,7 @@
    "name": "Alpine",
    "tla": "ALP",
    "team_id": "23",
-   "team_name": "",
+   "team_name": "Alpine",
    "history": [
     {
      "gameday": 1,
@@ -10738,7 +10738,7 @@
      "old_price": 18.8,
      "ownership": 7,
      "points": 23,
-     "quali_pts": 0,
+     "quali_pts": 23,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -10762,7 +10762,7 @@
    "name": "Williams",
    "tla": "WIL",
    "team_id": "210",
-   "team_name": "",
+   "team_name": "Williams",
    "history": [
     {
      "gameday": 1,
@@ -11047,7 +11047,7 @@
      "old_price": 13,
      "ownership": 9,
      "points": 1,
-     "quali_pts": 0,
+     "quali_pts": 1,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -11071,7 +11071,7 @@
    "name": "Aston Martin",
    "tla": "AST",
    "team_id": "24",
-   "team_name": "",
+   "team_name": "Aston Martin",
    "history": [
     {
      "gameday": 1,
@@ -11356,7 +11356,7 @@
      "old_price": 5.7,
      "ownership": 3,
      "points": -1,
-     "quali_pts": 0,
+     "quali_pts": -1,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -11380,7 +11380,7 @@
    "name": "Haas F1 Team",
    "tla": "HAA",
    "team_id": "26",
-   "team_name": "",
+   "team_name": "Haas F1 Team",
    "history": [
     {
      "gameday": 1,
@@ -11665,7 +11665,7 @@
      "old_price": 12,
      "ownership": 24,
      "points": 3,
-     "quali_pts": 0,
+     "quali_pts": 3,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -11689,7 +11689,7 @@
    "name": "Audi",
    "tla": "AUD",
    "team_id": "2640",
-   "team_name": "",
+   "team_name": "Audi",
    "history": [
     {
      "gameday": 1,
@@ -11974,7 +11974,7 @@
      "old_price": 6.8,
      "ownership": 21,
      "points": 3,
-     "quali_pts": 0,
+     "quali_pts": 3,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -11998,7 +11998,7 @@
    "name": "Racing Bulls",
    "tla": "RBS",
    "team_id": "2636",
-   "team_name": "",
+   "team_name": "Racing Bulls",
    "history": [
     {
      "gameday": 1,
@@ -12283,7 +12283,7 @@
      "old_price": 12.9,
      "ownership": 33,
      "points": 6,
-     "quali_pts": 0,
+     "quali_pts": 6,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -12307,7 +12307,7 @@
    "name": "Cadillac",
    "tla": "CAD",
    "team_id": "2641",
-   "team_name": "",
+   "team_name": "Cadillac",
    "history": [
     {
      "gameday": 1,
@@ -12592,7 +12592,7 @@
      "old_price": 3,
      "ownership": 8,
      "points": -1,
-     "quali_pts": 0,
+     "quali_pts": -1,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {

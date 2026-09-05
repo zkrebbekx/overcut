@@ -220,6 +220,10 @@ func Sync(season int) (Data, error) {
 					TeamID:   p.TeamID,
 					TeamName: p.TeamName,
 				}
+				// The feed leaves the team name blank on constructor rows.
+				if a.TeamName == "" {
+					a.TeamName = p.FullName
+				}
 				assets[p.PlayerID] = a
 				order = append(order, p.PlayerID)
 			}

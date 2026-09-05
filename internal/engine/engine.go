@@ -109,6 +109,15 @@ type HistoryView struct {
 	Ownership float64 `json:"ownership"`
 }
 
+// teamName returns the asset's team, falling back to the asset's own name
+// for a constructor recorded without one.
+func teamName(a dataset.Asset) string {
+	if a.TeamName != "" {
+		return a.TeamName
+	}
+	return a.Name
+}
+
 // Season returns the dataset shaped for the UI.
 func (e *Engine) Season() SeasonView {
 	e.mu.RLock()
@@ -131,7 +140,7 @@ func (e *Engine) Season() SeasonView {
 		}
 		av := AssetView{
 			ID: a.ID, Kind: string(a.Kind), Name: a.Name, TLA: a.TLA,
-			TeamID: a.TeamID, TeamName: a.TeamName,
+			TeamID: a.TeamID, TeamName: teamName(a),
 			Price: latest.Price, OldPrice: latest.OldPrice, Ownership: latest.Ownership,
 			Selectable: d.Selectable(a),
 		}
@@ -278,7 +287,7 @@ func (e *Engine) projectionView(target dataset.Round, sim model.SimResult, cond 
 			}
 		}
 		ap := AssetProjection{
-			ID: a.ID, Name: a.Name, Kind: string(a.Kind), TLA: a.TLA, TeamID: a.TeamID, TeamName: a.TeamName,
+			ID: a.ID, Name: a.Name, Kind: string(a.Kind), TLA: a.TLA, TeamID: a.TeamID, TeamName: teamName(a),
 			Price: latest.Price, Ownership: latest.Ownership,
 			Mean: p.Mean, SD: p.SD, P10: p.P10, P50: p.P50, P90: p.P90,
 		}
