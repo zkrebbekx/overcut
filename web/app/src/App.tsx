@@ -41,8 +41,18 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    location.hash = tab;
+    if (location.hash.replace("#", "") !== tab) location.hash = tab;
   }, [tab]);
+
+  // Follow the browser's back and forward buttons and external links.
+  useEffect(() => {
+    const onHash = () => {
+      const next = location.hash.replace("#", "") as Tab;
+      if (tabs.some((t) => t.id === next)) setTab(next);
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   const round = useMemo(() => {
     if (!season) return null;
