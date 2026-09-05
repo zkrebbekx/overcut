@@ -9,6 +9,7 @@ import { TrustView } from "./views/Trust";
 import { HindsightView } from "./views/Hindsight";
 import { RulesView } from "./views/Rules";
 import { ErrorBox, Spinner } from "./components/ui";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 type Tab = "decide" | "projections" | "prices" | "trust" | "hindsight" | "rules";
 
@@ -142,14 +143,16 @@ export default function App() {
           {error && <ErrorBox error={error} />}
           {!season && !error && <Spinner label={isStatic ? "Starting the engine in your browser…" : "Loading season…"} />}
           {season && round && (
-            <div key={tab} className="fade-in">
-              {tab === "decide" && <DecideView season={season} round={round} state={state} update={update} />}
-              {tab === "projections" && <ProjectionsView season={season} round={round} state={state} />}
-              {tab === "prices" && <PricesView />}
-              {tab === "trust" && <TrustView />}
-              {tab === "hindsight" && <HindsightView season={season} />}
-              {tab === "rules" && <RulesView />}
-            </div>
+            <ErrorBoundary resetKey={tab}>
+              <div key={tab} className="fade-in">
+                {tab === "decide" && <DecideView season={season} round={round} state={state} update={update} />}
+                {tab === "projections" && <ProjectionsView season={season} round={round} state={state} />}
+                {tab === "prices" && <PricesView />}
+                {tab === "trust" && <TrustView />}
+                {tab === "hindsight" && <HindsightView season={season} />}
+                {tab === "rules" && <RulesView />}
+              </div>
+            </ErrorBoundary>
           )}
         </main>
       </div>

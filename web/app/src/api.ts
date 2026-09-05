@@ -58,6 +58,7 @@ export interface AssetProjection {
   kind: Kind;
   tla?: string;
   team_id: string;
+  team_name: string;
   price: number;
   ownership: number;
   mean: number;

@@ -210,6 +210,7 @@ type AssetProjection struct {
 	Kind      string  `json:"kind"`
 	TLA       string  `json:"tla,omitempty"`
 	TeamID    string  `json:"team_id"`
+	TeamName  string  `json:"team_name"`
 	Price     float64 `json:"price"`
 	Ownership float64 `json:"ownership"`
 	Mean      float64 `json:"mean"`
@@ -277,7 +278,7 @@ func (e *Engine) projectionView(target dataset.Round, sim model.SimResult, cond 
 			}
 		}
 		ap := AssetProjection{
-			ID: a.ID, Name: a.Name, Kind: string(a.Kind), TLA: a.TLA, TeamID: a.TeamID,
+			ID: a.ID, Name: a.Name, Kind: string(a.Kind), TLA: a.TLA, TeamID: a.TeamID, TeamName: a.TeamName,
 			Price: latest.Price, Ownership: latest.Ownership,
 			Mean: p.Mean, SD: p.SD, P10: p.P10, P50: p.P50, P90: p.P90,
 		}
@@ -359,9 +360,11 @@ type OptimizeView struct {
 }
 
 func teamView(t optimize.Team, current map[string]bool) TeamView {
+	// In and Out start as empty slices so JSON carries [] rather than null.
 	tv := TeamView{
 		CaptainID: t.CaptainID, BoostID: t.BoostID, Cost: t.Cost, RawPoints: t.RawPoints,
 		Captain: t.Captain, Transfers: t.Transfers, Penalty: t.Penalty, Score: t.Score,
+		In: []string{}, Out: []string{},
 	}
 	inTeam := map[string]bool{}
 	for _, d := range t.Drivers {

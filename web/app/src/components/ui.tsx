@@ -78,13 +78,29 @@ export function money(v: number) {
   return `$${v.toFixed(1)}M`;
 }
 
-export function TeamEdge({ teamId }: { teamId: string }) {
-  return <span aria-hidden className="mr-2 inline-block h-4 w-[3px] rounded-sm" style={{ background: teamColor(teamId) }} />;
+// A 3px edge in the team's livery colour. Team colour is a data accent
+// only; it never colours chrome or text.
+export function TeamEdge({ team }: { team: string }) {
+  return <span aria-hidden title={team} className="mr-2 inline-block h-4 w-[3px] rounded-sm" style={{ background: teamColor(team) }} />;
 }
 
-// A neutral, evenly spaced hue per team id, used only as a 3px edge.
-export function teamColor(teamId: string) {
+const liveries: [RegExp, string][] = [
+  [/mercedes/i, "#27f4d2"],
+  [/ferrari/i, "#e8002d"],
+  [/mclaren/i, "#ff8000"],
+  [/red bull/i, "#3671c6"],
+  [/racing bulls|rb\b/i, "#6692ff"],
+  [/alpine/i, "#ff87bc"],
+  [/aston/i, "#229971"],
+  [/williams/i, "#64c4ff"],
+  [/haas/i, "#b6babd"],
+  [/audi|sauber/i, "#f50537"],
+  [/cadillac/i, "#d4af37"],
+];
+
+export function teamColor(team: string) {
+  for (const [re, hex] of liveries) if (re.test(team)) return hex;
   let h = 0;
-  for (const ch of teamId) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  for (const ch of team) h = (h * 31 + ch.charCodeAt(0)) % 360;
   return `oklch(0.72 0.14 ${h})`;
 }

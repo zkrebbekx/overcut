@@ -38,7 +38,7 @@ export function HindsightView({ season }: { season: SeasonView }) {
                 {[...t.drivers, ...t.constructors].map((a) => (
                   <li key={a.id} className="flex items-center justify-between">
                     <span className="flex items-center text-ink-2">
-                      <TeamEdge teamId={byId.get(a.id)?.team_id ?? ""} />
+                      <TeamEdge team={byId.get(a.id)?.team_name ?? ""} />
                       {a.name}
                       {a.id === t.captain_id && <span className="ml-2 text-xs font-semibold text-accent">×2</span>}
                     </span>

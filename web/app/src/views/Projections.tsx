@@ -101,7 +101,7 @@ export function ProjectionsView({ season, round, state }: { season: SeasonView; 
                     <tr key={a.id} onClick={() => setOpen(a.id)} className={`cursor-pointer border-t border-line/60 hover:bg-raised/50 ${mine ? "bg-accent/5" : ""}`}>
                       <td className="py-1.5 pr-3">
                         <span className="flex items-center">
-                          <TeamEdge teamId={a.team_id} />
+                          <TeamEdge team={a.team_name} />
                           <span className={mine ? "text-accent" : "text-ink"}>{a.name}</span>
                           {a.kind === "constructor" && <span className="ml-2 text-[10px] uppercase text-ink-3">team</span>}
                         </span>

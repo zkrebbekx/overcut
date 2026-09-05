@@ -40,7 +40,7 @@ export function TeamBuilder({ season, state, update }: { season: SeasonView; sta
         <div className="flex flex-wrap gap-2">
           {team.map((a) => (
             <span key={a.id} className="chip flex items-center py-1 pl-2 pr-1 text-sm">
-              <TeamEdge teamId={a.team_id} />
+              <TeamEdge team={a.team_name} />
               {a.kind === "driver" ? a.tla : a.name}
               <span className="num ml-2 text-xs text-ink-3">{a.price.toFixed(1)}</span>
               <button aria-label={`Remove ${a.name}`} onClick={() => update({ team: state.team.filter((id) => id !== a.id) })} className="ml-1 rounded p-0.5 text-ink-3 hover:text-loss">
@@ -64,7 +64,7 @@ export function TeamBuilder({ season, state, update }: { season: SeasonView; sta
           <div className="mt-2 flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
             {candidates.map((a) => (
               <button key={a.id} onClick={() => update({ team: [...state.team, a.id] })} className="chip flex items-center px-2 py-1 text-xs text-ink-2 hover:border-accent hover:text-ink">
-                <TeamEdge teamId={a.team_id} />
+                <TeamEdge team={a.team_name} />
                 {a.kind === "driver" ? `${a.tla} · ${a.name.split(" ").slice(-1)}` : a.name}
                 <span className="num ml-2 text-ink-3">{a.price.toFixed(1)}</span>
               </button>

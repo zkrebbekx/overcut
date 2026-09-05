@@ -56,6 +56,8 @@ export function DecideView({ season, round, state, update }: { season: SeasonVie
   const projById = useMemo(() => new Map(result?.projection.assets.map((a) => [a.id, a]) ?? []), [result]);
   const teamRange = useMemo(() => (best ? rangeOf(best, projById) : null), [best, projById]);
   const keepDelta = best && complete ? best.score - result!.current_score : null;
+  const moveIn = best?.in ?? [];
+  const moveOut = best?.out ?? [];
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
@@ -107,10 +109,10 @@ export function DecideView({ season, round, state, update }: { season: SeasonVie
                 </div>
               )}
 
-              {complete && (best.in.length > 0 || best.out.length > 0) && (
+              {complete && (moveIn.length > 0 || moveOut.length > 0) && (
                 <ul className="space-y-2">
-                  {best.out.map((outId, i) => {
-                    const inId = best.in[i];
+                  {moveOut.map((outId, i) => {
+                    const inId = moveIn[i];
                     const o = byId.get(outId);
                     const n = inId ? byId.get(inId) : undefined;
                     const op = projById.get(outId);
@@ -119,14 +121,14 @@ export function DecideView({ season, round, state, update }: { season: SeasonVie
                       <li key={outId} className="chip flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm">
                         <span className="w-10 text-[10px] uppercase tracking-wider text-loss">Out</span>
                         <span className="flex items-center text-ink-2">
-                          <TeamEdge teamId={o?.team_id ?? ""} />
+                          <TeamEdge team={o?.team_name ?? ""} />
                           {o?.name}
                           <span className="num ml-2 text-xs text-ink-3">{op?.mean.toFixed(1)}</span>
                         </span>
                         <ArrowRight size={14} className="text-ink-3" />
                         <span className="w-10 text-[10px] uppercase tracking-wider text-gain">In</span>
                         <span className="flex items-center text-ink">
-                          <TeamEdge teamId={n?.team_id ?? ""} />
+                          <TeamEdge team={n?.team_name ?? ""} />
                           {n?.name}
                           <span className="num ml-2 text-xs text-ink-3">{np?.mean.toFixed(1)}</span>
                         </span>
@@ -140,7 +142,7 @@ export function DecideView({ season, round, state, update }: { season: SeasonVie
                   })}
                 </ul>
               )}
-              {complete && best.in.length === 0 && <p className="text-sm text-gain">Keep your team. No transfer improves the projection.</p>}
+              {complete && moveIn.length === 0 && <p className="text-sm text-gain">Keep your team. No transfer improves the projection.</p>}
 
               <TeamLine team={best} byId={byId} projById={projById} chip={result.chip} />
             </div>
@@ -191,7 +193,7 @@ export function DecideView({ season, round, state, update }: { season: SeasonVie
   );
 }
 
-function TeamLine({ team, byId, projById, chip }: { team: TeamView; byId: Map<string, { tla?: string; team_id: string; name: string }>; projById: Map<string, { mean: number }>; chip: string }) {
+function TeamLine({ team, byId, projById, chip }: { team: TeamView; byId: Map<string, { tla?: string; team_name: string; name: string }>; projById: Map<string, { mean: number }>; chip: string }) {
   const all = [...team.drivers, ...team.constructors];
   return (
     <div>
@@ -202,7 +204,7 @@ function TeamLine({ team, byId, projById, chip }: { team: TeamView; byId: Map<st
           const star = a.id === team.captain_id ? (chip === "3x" ? " ×3" : " ×2") : a.id === team.boost_id ? " ×2" : "";
           return (
             <span key={a.id} className={`chip flex items-center px-2 py-1 text-sm ${star ? "border-accent/60" : ""}`}>
-              <TeamEdge teamId={meta?.team_id ?? ""} />
+              <TeamEdge team={meta?.team_name ?? ""} />
               {a.kind === "driver" ? meta?.tla ?? a.name : a.name}
               {star && <span className="ml-1 text-xs font-semibold text-accent">{star}</span>}
               <span className="num ml-2 text-xs text-ink-3">{projById.get(a.id)?.mean.toFixed(1)}</span>
