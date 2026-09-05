@@ -7,3 +7,6 @@ web/app/public/wasm_exec.js
 web/app/public/data/
 *.log
 .DS_Store
+web/dist/overcut.wasm
+web/dist/wasm_exec.js
+web/dist/data/

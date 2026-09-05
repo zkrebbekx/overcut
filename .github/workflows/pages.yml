@@ -28,13 +28,6 @@ jobs:
           cache: npm
           cache-dependency-path: web/app/package-lock.json
 
-      - name: Build the engine as WebAssembly
-        run: |
-          GOOS=js GOARCH=wasm go build -trimpath -ldflags="-s -w" -o web/app/public/overcut.wasm ./cmd/overcut-wasm
-          cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" web/app/public/wasm_exec.js
-          mkdir -p web/app/public/data
-          cp data/season2026.json web/app/public/data/season.json
-
       - name: Build the site
         working-directory: web/app
         env:
@@ -43,6 +36,15 @@ jobs:
         run: |
           npm ci
           npm run build -- --outDir ../site --emptyOutDir
+
+      # The wasm engine, its JS shim, and the season data go straight into
+      # the site output so the normal embedded build never carries them.
+      - name: Add the WebAssembly engine and data
+        run: |
+          GOOS=js GOARCH=wasm go build -trimpath -ldflags="-s -w" -o web/site/overcut.wasm ./cmd/overcut-wasm
+          cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" web/site/wasm_exec.js
+          mkdir -p web/site/data
+          cp data/season2026.json web/site/data/season.json
 
       - uses: actions/upload-pages-artifact@v3
         with:
