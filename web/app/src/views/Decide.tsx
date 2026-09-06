@@ -72,7 +72,7 @@ export function DecideView({ season, round, state, update }: { season: SeasonVie
               <div className="flex flex-wrap items-end gap-6">
                 <div>
                   <div className="text-xs uppercase tracking-[0.12em] text-ink-3">Projected</div>
-                  <div className="display num text-3xl font-bold text-ink md:text-4xl">{best.score.toFixed(1)}</div>
+                  <div className="display num text-3xl font-bold text-accent md:text-4xl">{best.score.toFixed(1)}</div>
                 </div>
                 {keepDelta !== null && (
                   <div>
@@ -160,7 +160,7 @@ export function DecideView({ season, round, state, update }: { season: SeasonVie
                     aria-pressed={pick === i}
                     className={`flex w-full items-center gap-3 rounded-[8px] px-3 py-2 text-left text-sm transition ${pick === i ? "bg-raised text-ink" : "text-ink-2 hover:bg-raised/60"}`}
                   >
-                    <span className="num w-6 text-ink-3">#{i + 1}</span>
+                    <span className={`num w-6 ${i === 0 ? "font-semibold text-accent" : "text-ink-3"}`}>#{i + 1}</span>
                     <span className="num w-14 font-semibold">{t.score.toFixed(1)}</span>
                     <span className="min-w-0 flex-1 text-xs leading-snug sm:truncate sm:text-sm">
                       {[...t.drivers, ...t.constructors]

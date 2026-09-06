@@ -33,7 +33,7 @@ export function HindsightView({ season }: { season: SeasonView }) {
       {data && (
         <div className="grid gap-3 lg:grid-cols-2">
           {data.teams.map((t, i) => (
-            <Card key={i} title={`#${i + 1}`} right={<span className="num text-sm font-semibold text-ink">{t.score.toFixed(0)} pts · {money(t.cost)}</span>}>
+            <Card key={i} title={i === 0 ? <span className="text-accent">#1 · best possible</span> : `#${i + 1}`} right={<span className={`num text-sm font-semibold ${i === 0 ? "text-accent" : "text-ink"}`}>{t.score.toFixed(0)} pts · {money(t.cost)}</span>}>
               <ul className="space-y-1 text-sm">
                 {[...t.drivers, ...t.constructors].map((a) => (
                   <li key={a.id} className="flex items-center justify-between">

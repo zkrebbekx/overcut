@@ -27,13 +27,13 @@ export function TrustView() {
         strategies are scored the same way so the edge is visible.
       </p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Driver error (MAE)" value={`±${data.DriverMAE.toFixed(1)}`} sub={`last-round baseline ±${data.BaselinePrev.toFixed(1)} · season-mean ±${data.BaselineSeason.toFixed(1)}`} tone="accent" />
+        <Stat label="Driver error (MAE)" value={`±${data.DriverMAE.toFixed(1)}`} sub={`last-round baseline ±${data.BaselinePrev.toFixed(1)} · season-mean ±${data.BaselineSeason.toFixed(1)}`} tone="mark" />
         <Stat label="Driver rank correlation" value={data.MeanSpearman.toFixed(2)} sub="Spearman ρ, 1.0 = perfect order" />
         <Stat label="Team points per round" value={data.ModelTeamPts.toFixed(0)} sub={`naive ${data.NaiveTeamPts.toFixed(0)} · hindsight limit ${data.HindsightTeamPts.toFixed(0)}`} tone="gain" />
         <Stat label="Of the possible gain" value={`${captured.toFixed(0)}%`} sub="captured between naive and hindsight" />
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Error with the grid known" value={`±${data.GridDriverMAE.toFixed(1)}`} sub="the Sunday-morning forecast, after qualifying, sprint, and penalties" tone="accent" />
+        <Stat label="Error with the grid known" value={`±${data.GridDriverMAE.toFixed(1)}`} sub="the Sunday-morning forecast, after qualifying, sprint, and penalties" tone="mark" />
         <Stat label="Rank correlation with the grid known" value={data.GridMeanSpearman.toFixed(2)} sub={`from ${data.MeanSpearman.toFixed(2)} before qualifying`} />
         <Stat label="Team points with the grid known" value={data.GridTeamPts.toFixed(0)} sub={`from ${data.ModelTeamPts.toFixed(0)} before qualifying`} tone="gain" />
         <Stat label="P10–P90 range coverage" value={`${(data.Coverage * 100).toFixed(0)}%`} sub={`${(data.GridCoverage * 100).toFixed(0)}% with the grid known · a calibrated range covers 80%`} />
