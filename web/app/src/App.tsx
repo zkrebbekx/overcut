@@ -61,7 +61,7 @@ export default function App() {
     return season.rounds.find((r) => r.round === n) ?? null;
   }, [season, state.round]);
 
-  const knows = describeKnowledge(state.conditions, !!round?.has_quali && !round?.has_results, !!round?.has_grid && !round?.has_results);
+  const knows = describeKnowledge(state.conditions, !!round?.has_quali, !!round?.has_grid, !!round?.has_results);
 
   async function sync() {
     if (!api.sync) return;
@@ -203,7 +203,10 @@ function teamFromURL(season: SeasonView): Partial<PlayerState> | null {
   return patch;
 }
 
-function describeKnowledge(c: { quali?: string[]; grid?: string[]; back?: string[]; fp3?: string[] }, officialQuali: boolean, officialGrid: boolean) {
+function describeKnowledge(c: { quali?: string[]; grid?: string[]; back?: string[]; fp3?: string[] }, officialQuali: boolean, officialGrid: boolean, complete: boolean) {
+  if (complete && !c.grid?.length && !c.quali?.length) {
+    return { label: "Round complete · official grid", tone: "ok", detail: "A finished round: the projection uses the real qualifying and grid, so you can compare it with the actual points." };
+  }
   const parts: string[] = [];
   if (c.grid?.length) parts.push("grid");
   else if (officialGrid) parts.push("official grid with penalties");

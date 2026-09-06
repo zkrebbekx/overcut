@@ -29,6 +29,12 @@ type RoundResult struct {
 	ConsMAE     float64
 	SpearmanRho float64 // rank correlation over drivers
 
+	// The same measures with the qualifying result and the official grid
+	// known: the Sunday-morning forecast.
+	GridDriverMAE   float64
+	GridSpearmanRho float64
+	GridTeamPts     float64
+
 	// Team points: what the projected optimal team really scored versus
 	// the hindsight optimum and versus a naive team.
 	ModelTeamPts     float64
@@ -45,6 +51,10 @@ type Report struct {
 	MeanSpearman   float64
 	BaselinePrev   float64 // driver MAE of the previous-round baseline
 	BaselineSeason float64 // driver MAE of the season-mean baseline
+
+	GridDriverMAE    float64 // with qualifying and grid known
+	GridMeanSpearman float64
+	GridTeamPts      float64
 
 	ModelTeamPts     float64
 	NaiveTeamPts     float64
@@ -65,10 +75,15 @@ func Run(d dataset.Data, cfg rules.Config, sims int, seed uint64) Report {
 		}
 		m := model.Fit(d, cfg, round.Round-1)
 		sim := m.Simulate(round.Round, round.HasSprint, sims, seed)
+		// The Sunday-morning forecast: qualifying and the official grid known.
+		gridSim := m.SimulateWith(round.Round, round.HasSprint, sims, seed, model.Conditions{
+			Quali: positions(round.QualiOrder()),
+			Grid:  positions(round.GridOrder()),
+		})
 
 		rr := RoundResult{Round: round.Round, Name: round.Name}
 
-		var projD, actD []float64
+		var projD, actD, gridD []float64
 		nD, nC := 0.0, 0.0
 		for _, a := range d.Assets {
 			actual, ok := a.RoundHistory(round.Round)
@@ -79,11 +94,14 @@ func Run(d dataset.Data, cfg rules.Config, sims int, seed uint64) Report {
 			if !ok {
 				continue
 			}
+			gproj, _ := gridSim.ByID(a.ID)
 			err := math.Abs(proj.Mean - actual.Points)
 			if a.Kind == dataset.KindDriver {
 				rr.DriverMAE += err
+				rr.GridDriverMAE += math.Abs(gproj.Mean - actual.Points)
 				nD++
 				projD = append(projD, proj.Mean)
+				gridD = append(gridD, gproj.Mean)
 				actD = append(actD, actual.Points)
 
 				pooledPrev = append(pooledPrev, math.Abs(prevPoints(a, round.Round)-actual.Points))
@@ -95,13 +113,16 @@ func Run(d dataset.Data, cfg rules.Config, sims int, seed uint64) Report {
 		}
 		if nD > 0 {
 			rr.DriverMAE /= nD
+			rr.GridDriverMAE /= nD
 		}
 		if nC > 0 {
 			rr.ConsMAE /= nC
 		}
 		rr.SpearmanRho = spearman(projD, actD)
+		rr.GridSpearmanRho = spearman(gridD, actD)
 
 		rr.ModelTeamPts = teamActualPoints(d, cfg, round.Round, projections(d, sim, round.Round))
+		rr.GridTeamPts = teamActualPoints(d, cfg, round.Round, projections(d, gridSim, round.Round))
 		rr.NaiveTeamPts = teamActualPoints(d, cfg, round.Round, naiveProjections(d, round.Round))
 		rr.HindsightTeamPts = teamActualPoints(d, cfg, round.Round, actualAsProjection(d, round.Round))
 
@@ -116,6 +137,9 @@ func Run(d dataset.Data, cfg rules.Config, sims int, seed uint64) Report {
 		rep.DriverMAE += rr.DriverMAE / n
 		rep.ConsMAE += rr.ConsMAE / n
 		rep.MeanSpearman += rr.SpearmanRho / n
+		rep.GridDriverMAE += rr.GridDriverMAE / n
+		rep.GridMeanSpearman += rr.GridSpearmanRho / n
+		rep.GridTeamPts += rr.GridTeamPts / n
 		rep.ModelTeamPts += rr.ModelTeamPts / n
 		rep.NaiveTeamPts += rr.NaiveTeamPts / n
 		rep.HindsightTeamPts += rr.HindsightTeamPts / n
@@ -215,6 +239,18 @@ func teamActualPoints(d dataset.Data, cfg rules.Config, round int, assets []opti
 	// double on the projected captain's actual points.
 	total += actual[t.CaptainID]
 	return total
+}
+
+// positions converts an order of driver codes from P1 into a position map.
+func positions(order []string) map[string]int {
+	if order == nil {
+		return nil
+	}
+	out := map[string]int{}
+	for i, tla := range order {
+		out[tla] = i + 1
+	}
+	return out
 }
 
 func prevPoints(a dataset.Asset, round int) float64 {

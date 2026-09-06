@@ -71,6 +71,8 @@ export interface AssetProjection {
   p90: number;
   last_points: number;
   avg_points: number;
+  actual_points: number;
+  has_actual: boolean;
 }
 
 export interface ProjectionView {
@@ -156,6 +158,9 @@ export interface BacktestRound {
   DriverMAE: number;
   ConsMAE: number;
   SpearmanRho: number;
+  GridDriverMAE: number;
+  GridSpearmanRho: number;
+  GridTeamPts: number;
   ModelTeamPts: number;
   NaiveTeamPts: number;
   HindsightTeamPts: number;
@@ -168,6 +173,9 @@ export interface BacktestReport {
   MeanSpearman: number;
   BaselinePrev: number;
   BaselineSeason: number;
+  GridDriverMAE: number;
+  GridMeanSpearman: number;
+  GridTeamPts: number;
   ModelTeamPts: number;
   NaiveTeamPts: number;
   HindsightTeamPts: number;

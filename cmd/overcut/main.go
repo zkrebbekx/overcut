@@ -454,6 +454,7 @@ func cmdBacktest(args []string) error {
 	c := addCommon(fs)
 	sims := fs.Int("sims", 5000, "simulation count per round")
 	seed := fs.Uint64("seed", 1, "random seed")
+	gridInfluence := fs.Float64("grid-influence", model.GridInfluence, "weight of the grid slot in the race finish (calibration)")
 	fs.Parse(args)
 
 	d, err := c.loadData()
@@ -464,6 +465,7 @@ func cmdBacktest(args []string) error {
 	if err != nil {
 		return err
 	}
+	model.GridInfluence = *gridInfluence
 	rep := backtest.Run(d, cfg, *sims, *seed)
 	if len(rep.Rounds) == 0 {
 		return fmt.Errorf("not enough completed rounds to backtest")
@@ -471,19 +473,19 @@ func cmdBacktest(args []string) error {
 
 	fmt.Printf("Walk-forward backtest over %d rounds (fit on rounds before each)\n\n", len(rep.Rounds))
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
-	fmt.Fprintln(w, "ROUND\tRACE\tDRV MAE\tCON MAE\tRANK ρ\tMODEL TEAM\tNAIVE TEAM\tHINDSIGHT")
+	fmt.Fprintln(w, "ROUND\tRACE\tDRV MAE\tGRID MAE\tCON MAE\tRANK ρ\tGRID ρ\tMODEL TEAM\tGRID TEAM\tNAIVE TEAM\tHINDSIGHT")
 	for _, rr := range rep.Rounds {
-		fmt.Fprintf(w, "%d\t%s\t%.1f\t%.1f\t%.2f\t%.0f\t%.0f\t%.0f\n",
-			rr.Round, rr.Name, rr.DriverMAE, rr.ConsMAE, rr.SpearmanRho,
-			rr.ModelTeamPts, rr.NaiveTeamPts, rr.HindsightTeamPts)
+		fmt.Fprintf(w, "%d\t%s\t%.1f\t%.1f\t%.1f\t%.2f\t%.2f\t%.0f\t%.0f\t%.0f\t%.0f\n",
+			rr.Round, rr.Name, rr.DriverMAE, rr.GridDriverMAE, rr.ConsMAE, rr.SpearmanRho, rr.GridSpearmanRho,
+			rr.ModelTeamPts, rr.GridTeamPts, rr.NaiveTeamPts, rr.HindsightTeamPts)
 	}
 	w.Flush()
 
-	fmt.Printf("\nDriver points MAE:   model %.1f | last-round baseline %.1f | season-mean baseline %.1f\n",
-		rep.DriverMAE, rep.BaselinePrev, rep.BaselineSeason)
-	fmt.Printf("Mean driver rank ρ:  %.2f\n", rep.MeanSpearman)
-	fmt.Printf("Mean team points:    model %.0f | naive %.0f | hindsight optimum %.0f\n",
-		rep.ModelTeamPts, rep.NaiveTeamPts, rep.HindsightTeamPts)
+	fmt.Printf("\nDriver points MAE:   model %.1f | with grid known %.1f | last-round baseline %.1f | season-mean baseline %.1f\n",
+		rep.DriverMAE, rep.GridDriverMAE, rep.BaselinePrev, rep.BaselineSeason)
+	fmt.Printf("Mean driver rank ρ:  %.2f | with grid known %.2f\n", rep.MeanSpearman, rep.GridMeanSpearman)
+	fmt.Printf("Mean team points:    model %.0f | with grid known %.0f | naive %.0f | hindsight optimum %.0f\n",
+		rep.ModelTeamPts, rep.GridTeamPts, rep.NaiveTeamPts, rep.HindsightTeamPts)
 	fmt.Printf("Model captures %.0f%% of the naive→hindsight gap.\n",
 		100*(rep.ModelTeamPts-rep.NaiveTeamPts)/(rep.HindsightTeamPts-rep.NaiveTeamPts))
 	return nil

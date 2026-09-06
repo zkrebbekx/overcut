@@ -138,7 +138,7 @@ func (e *Engine) Season() SeasonView {
 		v.Rounds = append(v.Rounds, RoundView{
 			Round: r.Round, Name: r.Name, CircuitID: r.CircuitID, Date: r.Date,
 			HasSprint: r.HasSprint, HasResults: r.HasResults,
-			HasQuali: len(r.Quali) > 0, HasGrid: len(r.Grid) > 0, Sessions: r.Sessions,
+			HasQuali: len(r.Quali) > 0, HasGrid: r.GridOrder() != nil, Sessions: r.Sessions,
 		})
 	}
 	for _, a := range d.Assets {
@@ -227,12 +227,10 @@ type ProjectionView struct {
 }
 
 // withKnownWeekend fills an empty qualifying order and an empty grid from
-// the official data when the round has qualified but not raced. The grid
-// carries every penalty, so it takes precedence over back-of-grid hints.
+// the official data: the published grid before the race, the race
+// classification after it. The grid carries every penalty, so it takes
+// precedence over back-of-grid hints.
 func withKnownWeekend(target dataset.Round, cond Conditions) (c Conditions, quali, grid bool) {
-	if target.HasResults {
-		return cond, false, false
-	}
 	if len(cond.Quali) == 0 {
 		if order := target.QualiOrder(); order != nil {
 			cond.Quali = order
@@ -265,6 +263,9 @@ type AssetProjection struct {
 	P90       float64 `json:"p90"`
 	LastPts   float64 `json:"last_points"`
 	AvgPts    float64 `json:"avg_points"`
+	// Actual is the official score once the round is complete.
+	Actual    float64 `json:"actual_points"`
+	HasActual bool    `json:"has_actual"`
 }
 
 func (e *Engine) resolveRound(round int) (dataset.Round, error) {
@@ -332,6 +333,11 @@ func (e *Engine) projectionView(target dataset.Round, sim model.SimResult, cond 
 		}
 		if n > 0 {
 			ap.AvgPts = sum / n
+		}
+		if target.HasResults {
+			if h, ok := a.RoundHistory(target.Round); ok {
+				ap.Actual, ap.HasActual = h.Points, true
+			}
 		}
 		v.Assets = append(v.Assets, ap)
 	}

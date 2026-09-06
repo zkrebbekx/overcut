@@ -58,8 +58,9 @@ type Conditions struct {
 }
 
 // GridInfluence is the weight of the grid slot in the race finish score.
-// The remainder of the weight goes to season race pace.
-const GridInfluence = 0.35
+// The remainder of the weight goes to season race pace. The value is
+// calibrated on the walk-forward backtest with the grid known.
+var GridInfluence = 0.35
 
 // Simulate runs a Monte Carlo simulation of one round and returns the
 // fantasy-point distribution per asset. The same seed gives the same

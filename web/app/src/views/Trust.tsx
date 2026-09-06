@@ -32,6 +32,11 @@ export function TrustView() {
         <Stat label="Team points per round" value={data.ModelTeamPts.toFixed(0)} sub={`naive ${data.NaiveTeamPts.toFixed(0)} · hindsight limit ${data.HindsightTeamPts.toFixed(0)}`} tone="gain" />
         <Stat label="Of the possible gain" value={`${captured.toFixed(0)}%`} sub="captured between naive and hindsight" />
       </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Stat label="Error with the grid known" value={`±${data.GridDriverMAE.toFixed(1)}`} sub="the Sunday-morning forecast, after qualifying and penalties" tone="accent" />
+        <Stat label="Rank correlation with the grid known" value={data.GridMeanSpearman.toFixed(2)} sub={`from ${data.MeanSpearman.toFixed(2)} before qualifying`} />
+        <Stat label="Team points with the grid known" value={data.GridTeamPts.toFixed(0)} sub={`from ${data.ModelTeamPts.toFixed(0)} before qualifying`} tone="gain" />
+      </div>
 
       <Card title="Pre-race optimal team, scored with real points">
         <div className="h-64">
@@ -57,9 +62,11 @@ export function TrustView() {
               <tr>
                 <th className="pb-2 pr-3 font-medium">Round</th>
                 <th className="pb-2 pr-3 text-right font-medium">Driver MAE</th>
+                <th className="pb-2 pr-3 text-right font-medium">Grid known</th>
                 <th className="pb-2 pr-3 text-right font-medium">Constructor MAE</th>
                 <th className="pb-2 pr-3 text-right font-medium">Rank ρ</th>
                 <th className="pb-2 pr-3 text-right font-medium">Model team</th>
+                <th className="pb-2 pr-3 text-right font-medium">Grid known</th>
                 <th className="pb-2 pr-3 text-right font-medium">Naive team</th>
                 <th className="pb-2 text-right font-medium">Hindsight</th>
               </tr>
@@ -71,9 +78,11 @@ export function TrustView() {
                     R{r.Round} {r.Name}
                   </td>
                   <td className="py-1.5 pr-3 text-right">{r.DriverMAE.toFixed(1)}</td>
+                  <td className="py-1.5 pr-3 text-right">{r.GridDriverMAE.toFixed(1)}</td>
                   <td className="py-1.5 pr-3 text-right">{r.ConsMAE.toFixed(1)}</td>
                   <td className="py-1.5 pr-3 text-right">{r.SpearmanRho.toFixed(2)}</td>
                   <td className="py-1.5 pr-3 text-right font-semibold text-ink">{r.ModelTeamPts.toFixed(0)}</td>
+                  <td className="py-1.5 pr-3 text-right">{r.GridTeamPts.toFixed(0)}</td>
                   <td className="py-1.5 pr-3 text-right">{r.NaiveTeamPts.toFixed(0)}</td>
                   <td className="py-1.5 text-right">{r.HindsightTeamPts.toFixed(0)}</td>
                 </tr>

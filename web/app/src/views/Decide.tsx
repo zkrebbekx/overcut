@@ -186,7 +186,7 @@ export function DecideView({ season, round, state, update }: { season: SeasonVie
           <TeamBuilder season={season} state={state} update={update} />
         </Card>
         <Card title="What the model knows">
-          <ConditionsPanel season={season} value={state.conditions} onChange={(conditions) => update({ conditions })} officialQuali={round.has_quali && !round.has_results} officialGrid={round.has_grid && !round.has_results} />
+          <ConditionsPanel season={season} value={state.conditions} onChange={(conditions) => update({ conditions })} officialQuali={round.has_quali} officialGrid={round.has_grid} />
         </Card>
       </div>
     </div>

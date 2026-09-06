@@ -153,17 +153,38 @@ func fetchGrids(season int, rounds map[int]*Round) {
 	}
 }
 
-// GridOrder returns the official starting grid as TLAs from P1, or nil
-// when the round has no published grid.
+// GridOrder returns the official starting grid as TLAs from P1. Before the
+// race the order comes from the published grid; after the race it comes
+// from the race classification, which records each car's grid slot. A
+// pit-lane start (slot 0) goes to the back. It returns nil when neither
+// is known.
 func (r Round) GridOrder() []string {
-	if len(r.Grid) == 0 {
+	grid := r.Grid
+	if len(grid) == 0 && len(r.Race) > 0 {
+		grid = map[string]int{}
+		back := len(r.Race) + 1
+		for tla, row := range r.Race {
+			if row.Grid > 0 {
+				grid[tla] = row.Grid
+			} else {
+				grid[tla] = back
+				back++
+			}
+		}
+	}
+	if len(grid) == 0 {
 		return nil
 	}
-	out := make([]string, 0, len(r.Grid))
-	for tla := range r.Grid {
+	out := make([]string, 0, len(grid))
+	for tla := range grid {
 		out = append(out, tla)
 	}
-	sort.Slice(out, func(i, j int) bool { return r.Grid[out[i]] < r.Grid[out[j]] })
+	sort.Slice(out, func(i, j int) bool {
+		if grid[out[i]] != grid[out[j]] {
+			return grid[out[i]] < grid[out[j]]
+		}
+		return out[i] < out[j]
+	})
 	return out
 }
 

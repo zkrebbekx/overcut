@@ -91,7 +91,7 @@ export function ProjectionsView({ season, round, state }: { season: SeasonView; 
                   </th>
                   <th className="pb-2 pr-3 text-right font-medium">Pts/$M</th>
                   <th className="pb-2 pr-3 text-right font-medium">Owned</th>
-                  <th className="pb-2 text-right font-medium">Last</th>
+                  <th className="pb-2 text-right font-medium">{rows.some((r) => r.has_actual) ? "Actual" : "Last"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -113,7 +113,15 @@ export function ProjectionsView({ season, round, state }: { season: SeasonView; 
                       </td>
                       <td className="num py-1.5 pr-3 text-right text-ink-2">{(a.mean / a.price).toFixed(2)}</td>
                       <td className="num py-1.5 pr-3 text-right text-ink-2">{a.ownership.toFixed(0)}%</td>
-                      <td className="num py-1.5 text-right text-ink-2">{a.last_points.toFixed(0)}</td>
+                      <td className="num py-1.5 text-right text-ink-2">
+                        {a.has_actual ? (
+                          <span title={`projected ${a.mean.toFixed(1)}`} className={Math.abs(a.actual_points - a.mean) <= a.sd ? "text-ink" : "text-warn"}>
+                            {a.actual_points.toFixed(0)}
+                          </span>
+                        ) : (
+                          a.last_points.toFixed(0)
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
