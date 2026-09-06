@@ -35,6 +35,7 @@ Usage:
   overcut prices                                    predict price changes
   overcut backtest   [-sims 5000]                   measure model accuracy
   overcut hindsight  [-round N] [-top 5]            best team for a past round
+  overcut review     [-round N] [-team LIST]        projection vs actual for a past round
   overcut serve      [-addr 127.0.0.1:8080]         web UI + JSON API
 
 Common flags:
@@ -73,6 +74,8 @@ func main() {
 		err = cmdHindsight(args)
 	case "serve":
 		err = cmdServe(args)
+	case "review":
+		err = cmdReview(args)
 	case "help", "-h", "--help":
 		fmt.Print(usage)
 	default:
@@ -484,10 +487,53 @@ func cmdBacktest(args []string) error {
 	fmt.Printf("\nDriver points MAE:   model %.1f | with grid known %.1f | last-round baseline %.1f | season-mean baseline %.1f\n",
 		rep.DriverMAE, rep.GridDriverMAE, rep.BaselinePrev, rep.BaselineSeason)
 	fmt.Printf("Mean driver rank ρ:  %.2f | with grid known %.2f\n", rep.MeanSpearman, rep.GridMeanSpearman)
+	fmt.Printf("P10–P90 coverage:    %.0f%% | with grid known %.0f%% (a calibrated range covers 80%%)\n", rep.Coverage*100, rep.GridCoverage*100)
 	fmt.Printf("Mean team points:    model %.0f | with grid known %.0f | naive %.0f | hindsight optimum %.0f\n",
 		rep.ModelTeamPts, rep.GridTeamPts, rep.NaiveTeamPts, rep.HindsightTeamPts)
 	fmt.Printf("Model captures %.0f%% of the naive→hindsight gap.\n",
 		100*(rep.ModelTeamPts-rep.NaiveTeamPts)/(rep.HindsightTeamPts-rep.NaiveTeamPts))
+	return nil
+}
+
+func cmdReview(args []string) error {
+	fs := flag.NewFlagSet("review", flag.ExitOnError)
+	c := addCommon(fs)
+	round := fs.Int("round", 0, "round (default: latest completed)")
+	team := fs.String("team", "", "team held for the round (TLAs and constructor names)")
+	sims := fs.Int("sims", 20000, "simulation count")
+	fs.Parse(args)
+
+	d, err := c.loadData()
+	if err != nil {
+		return err
+	}
+	cfg, err := c.loadRules()
+	if err != nil {
+		return err
+	}
+	ids, err := resolveTeam(d, *team)
+	if err != nil {
+		return err
+	}
+	view, err := engine.New(d, cfg).Review(engine.ReviewInput{Round: *round, Sims: *sims, Team: ids})
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Round %d — %s — projection (grid known) vs official points\n\n", view.Round, view.Name)
+	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
+	fmt.Fprintln(w, "ASSET\tPROJ\tP10\tP90\tACTUAL\tDELTA\tZ\tHELD")
+	for _, a := range view.Assets {
+		held := ""
+		if a.Held {
+			held = "•"
+		}
+		fmt.Fprintf(w, "%s\t%.1f\t%.0f\t%.0f\t%.0f\t%+.1f\t%+.1f\t%s\n", a.Name, a.Projected, a.P10, a.P90, a.Actual, a.Delta, a.Z, held)
+	}
+	w.Flush()
+	fmt.Printf("\nDriver MAE %.1f · %.0f%% of drivers inside P10–P90 · hindsight optimum %.0f pts\n", view.DriverMAE, view.Coverage*100, view.HindsightPts)
+	if len(ids) > 0 {
+		fmt.Printf("Your team: projected %.1f, actual %.0f\n", view.TeamProjected, view.TeamActual)
+	}
 	return nil
 }
 

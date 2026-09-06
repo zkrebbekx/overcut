@@ -38,6 +38,7 @@ func (s *Server) Handler() http.Handler {
 		writeJSON(w, s.engine.Backtest(queryInt(r, "sims", 3000)))
 	})
 	mux.HandleFunc("GET /api/hindsight", s.handleHindsight)
+	mux.HandleFunc("POST /api/review", s.handleReview)
 	mux.HandleFunc("POST /api/sync", s.handleSync)
 	if s.ui != nil {
 		mux.Handle("/", spaHandler(s.ui))
@@ -122,6 +123,20 @@ func (s *Server) handleOptimize(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleHindsight(w http.ResponseWriter, r *http.Request) {
 	view, err := s.engine.Hindsight(queryInt(r, "round", 0), queryInt(r, "top", 5))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	writeJSON(w, view)
+}
+
+func (s *Server) handleReview(w http.ResponseWriter, r *http.Request) {
+	var in engine.ReviewInput
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		writeError(w, http.StatusBadRequest, fmt.Errorf("bad request body: %w", err))
+		return
+	}
+	view, err := s.engine.Review(in)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return

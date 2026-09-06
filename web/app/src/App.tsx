@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, BarChart3, BookOpen, Crosshair, History, RefreshCw, TrendingUp } from "lucide-react";
+import { Activity, BarChart3, BookOpen, ClipboardCheck, Crosshair, History, RefreshCw, TrendingUp } from "lucide-react";
 import { api, isStatic, type Conditions, type SeasonView } from "./api";
 import { usePlayerState, type PlayerState } from "./store";
 import { DecideView } from "./views/Decide";
@@ -7,15 +7,17 @@ import { ProjectionsView } from "./views/Projections";
 import { PricesView } from "./views/Prices";
 import { TrustView } from "./views/Trust";
 import { HindsightView } from "./views/Hindsight";
+import { ReviewView } from "./views/Review";
 import { RulesView } from "./views/Rules";
 import { ErrorBox, Spinner } from "./components/ui";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
-type Tab = "decide" | "projections" | "prices" | "trust" | "hindsight" | "rules";
+type Tab = "decide" | "projections" | "review" | "prices" | "trust" | "hindsight" | "rules";
 
 const tabs: { id: Tab; label: string; icon: typeof Crosshair }[] = [
   { id: "decide", label: "Decide", icon: Crosshair },
   { id: "projections", label: "Projections", icon: BarChart3 },
+  { id: "review", label: "Review", icon: ClipboardCheck },
   { id: "prices", label: "Prices", icon: TrendingUp },
   { id: "trust", label: "Trust", icon: Activity },
   { id: "hindsight", label: "Hindsight", icon: History },
@@ -61,7 +63,7 @@ export default function App() {
     return season.rounds.find((r) => r.round === n) ?? null;
   }, [season, state.round]);
 
-  const knows = describeKnowledge(state.conditions, !!round?.has_quali, !!round?.has_grid, !!round?.has_results);
+  const knows = describeKnowledge(state.conditions, !!round?.has_quali, !!round?.has_grid, !!round?.has_results, !!round?.has_sprint && !!round?.has_sprint_result);
 
   async function sync() {
     if (!api.sync) return;
@@ -147,6 +149,7 @@ export default function App() {
               <div key={tab} className="fade-in">
                 {tab === "decide" && <DecideView season={season} round={round} state={state} update={update} />}
                 {tab === "projections" && <ProjectionsView season={season} round={round} state={state} />}
+                {tab === "review" && <ReviewView season={season} state={state} />}
                 {tab === "prices" && <PricesView />}
                 {tab === "trust" && <TrustView />}
                 {tab === "hindsight" && <HindsightView season={season} />}
@@ -203,15 +206,16 @@ function teamFromURL(season: SeasonView): Partial<PlayerState> | null {
   return patch;
 }
 
-function describeKnowledge(c: { quali?: string[]; grid?: string[]; back?: string[]; fp3?: string[] }, officialQuali: boolean, officialGrid: boolean, complete: boolean) {
+function describeKnowledge(c: { quali?: string[]; grid?: string[]; back?: string[]; fp3?: string[] }, officialQuali: boolean, officialGrid: boolean, complete: boolean, sprintResult: boolean) {
   if (complete && !c.grid?.length && !c.quali?.length) {
-    return { label: "Round complete · official grid", tone: "ok", detail: "A finished round: the projection uses the real qualifying and grid, so you can compare it with the actual points." };
+    return { label: "Round complete · official grid", tone: "ok", detail: "A finished round: the projection uses the real qualifying, grid, and sprint, so you can compare it with the actual points." };
   }
   const parts: string[] = [];
   if (c.grid?.length) parts.push("grid");
   else if (officialGrid) parts.push("official grid with penalties");
   else if (c.quali?.length) parts.push("qualifying");
   else if (officialQuali) parts.push("official qualifying");
+  if (sprintResult) parts.push("sprint result");
   if (c.back?.length && !officialGrid && !c.grid?.length) parts.push("penalties");
   if (c.fp3?.length) parts.push("FP3");
   if (parts.length === 0) {

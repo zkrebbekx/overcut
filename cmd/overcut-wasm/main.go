@@ -77,6 +77,13 @@ func main() {
 	api.Set("hindsight", js.FuncOf(func(this js.Value, args []js.Value) any {
 		return reply(eng.Hindsight(args[0].Int(), args[1].Int()))
 	}))
+	api.Set("review", js.FuncOf(func(this js.Value, args []js.Value) any {
+		var in engine.ReviewInput
+		if err := json.Unmarshal([]byte(args[0].String()), &in); err != nil {
+			return reply(nil, err)
+		}
+		return reply(eng.Review(in))
+	}))
 
 	js.Global().Set("overcut", api)
 	select {}

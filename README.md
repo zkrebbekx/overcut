@@ -18,9 +18,15 @@ should I do this round, and how confident should I be?**
 - **Project.** A Monte Carlo model simulates the weekend many thousand
   times and gives every asset a full points distribution: mean, P10, P50,
   and P90. Optimize for the expected value, the safe floor, or the ceiling.
-- **Know the weekend.** Enter the qualifying order, the starting grid,
-  back-of-grid penalties, or the FP3 order. The model uses what it knows
-  and samples the rest. The status is visible on every screen.
+- **Know the weekend.** The model uses everything that is official: the
+  qualifying classification, the starting grid with every penalty applied
+  (read from the official results pages a few hours after qualifying), and
+  the sprint result on a sprint weekend. Anything not yet known can be
+  entered by hand — the FP3 order as a pace prior, or drivers sent to the
+  back — and the rest is sampled. The status is visible on every screen.
+- **Review.** For any finished round: what the model expected on Sunday
+  morning against what happened, ranked by surprise, with your own team's
+  projected and actual score and the hindsight optimum.
 - **Prices.** A predictor for the next price change, fitted on the season's
   real price moves, with its own measured error and direction hit rate.
 - **Trust.** A walk-forward backtest replays the season: fit on earlier
@@ -39,6 +45,14 @@ Backtest on the 2026 season, rounds 4–12:
 | Driver points MAE | **11.4** | 15.5 | 12.1 |
 | Driver rank correlation (Spearman) | **0.59** | — | — |
 | Pre-race optimal team, real points per round | **189** | 139 | 288 (hindsight limit) |
+| Drivers inside the projected P10–P90 range | **77%** (a calibrated range covers 80%) | — | — |
+
+With the qualifying result, the grid, and the sprint known — the
+Sunday-morning forecast — the driver error is 11.2 and the rank
+correlation 0.60. Knowing the grid moves individual drivers by the right
+amount, but race-day variance dominates a driver's score, so the pooled
+error barely changes; the Trust view shows both so nobody has to take
+that on faith.
 
 Price predictor: $0.28M mean absolute error and 80% direction hit rate,
 walk-forward on 318 real price moves.
@@ -51,8 +65,9 @@ The scoring engine reproduces the official qualifying points exactly on
 **https://zkrebbekx.github.io/overcut/**
 
 The hosted site runs the same Go engine compiled to WebAssembly, inside a
-Web Worker. Nothing leaves your browser. A scheduled workflow refreshes
-the season data every six hours and redeploys.
+Web Worker. Nothing leaves your browser. A scheduled workflow follows the
+race calendar: it checks every twenty minutes, syncs when a session has
+just ended (or the official grid is due), commits the data, and redeploys.
 
 ## Install locally
 
@@ -81,6 +96,8 @@ overcut optimize -chip 3x                          # chips: wildcard | limitless
 overcut prices
 overcut backtest
 overcut hindsight -round 12
+overcut review -round 12 -team "GAS,COL,HUL,ANT,LIN,Mercedes,Ferrari"
+overcut sync -when-due                             # only when a session just ended
 ```
 
 `sync` writes `~/.overcut/season2026.json`. Every other command works
@@ -105,9 +122,12 @@ offline from that file and is deterministic for a given seed.
 
 ## Data
 
-Two public sources, no authentication:
+Three public sources, no authentication:
 
-- Race classifications from the Jolpica F1 API.
+- Schedule with session times, and the qualifying, sprint, and race
+  classifications, from the Jolpica F1 API.
+- The official starting grid, with penalties, from the Formula 1 results
+  pages.
 - Prices, ownership, and official fantasy points from the F1 Fantasy
   game's public feed.
 

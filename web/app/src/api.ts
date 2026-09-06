@@ -11,6 +11,7 @@ export interface RoundView {
   has_results: boolean;
   has_quali: boolean;
   has_grid: boolean;
+  has_sprint_result: boolean;
   sessions?: Record<string, string>;
 }
 
@@ -53,6 +54,42 @@ export interface Conditions {
   grid?: string[];
   back?: string[];
   fp3?: string[];
+  sprint?: string[];
+  sprint_grid?: string[];
+  sprint_dnf?: string[];
+}
+
+export interface ReviewAsset {
+  id: string;
+  name: string;
+  kind: Kind;
+  tla?: string;
+  team_name: string;
+  price: number;
+  ownership: number;
+  projected: number;
+  sd: number;
+  p10: number;
+  p90: number;
+  actual: number;
+  delta: number;
+  z: number;
+  in_range: boolean;
+  held: boolean;
+}
+
+export interface ReviewView {
+  round: number;
+  name: string;
+  has_sprint: boolean;
+  sims: number;
+  assets: ReviewAsset[];
+  coverage: number;
+  driver_mae: number;
+  team_projected: number;
+  team_actual: number;
+  captain_id?: string;
+  hindsight_points: number;
 }
 
 export interface AssetProjection {
@@ -83,6 +120,7 @@ export interface ProjectionView {
   conditions: Conditions;
   quali_from_data: boolean;
   grid_from_data: boolean;
+  sprint_from_data: boolean;
   assets: AssetProjection[];
 }
 
@@ -176,6 +214,8 @@ export interface BacktestReport {
   GridDriverMAE: number;
   GridMeanSpearman: number;
   GridTeamPts: number;
+  Coverage: number;
+  GridCoverage: number;
   ModelTeamPts: number;
   NaiveTeamPts: number;
   HindsightTeamPts: number;

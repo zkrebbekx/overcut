@@ -188,6 +188,47 @@ func (r Round) GridOrder() []string {
 	return out
 }
 
+// SprintOrder returns the sprint classification as TLAs from P1 with the
+// retired cars last, the sprint grid the same way, and the retired set.
+// It returns nil orders when the sprint has not run.
+func (r Round) SprintOrder() (finish, grid []string, dnf map[string]bool) {
+	if len(r.Sprint) == 0 {
+		return nil, nil, nil
+	}
+	dnf = map[string]bool{}
+	for tla, row := range r.Sprint {
+		finish = append(finish, tla)
+		grid = append(grid, tla)
+		if row.DNF {
+			dnf[tla] = true
+		}
+	}
+	sort.Slice(finish, func(i, j int) bool {
+		a, b := r.Sprint[finish[i]], r.Sprint[finish[j]]
+		if a.DNF != b.DNF {
+			return !a.DNF
+		}
+		if a.Pos != b.Pos {
+			return a.Pos < b.Pos
+		}
+		return finish[i] < finish[j]
+	})
+	back := len(r.Sprint) + 1
+	slot := func(tla string) int {
+		if g := r.Sprint[tla].Grid; g > 0 {
+			return g
+		}
+		return back
+	}
+	sort.Slice(grid, func(i, j int) bool {
+		if slot(grid[i]) != slot(grid[j]) {
+			return slot(grid[i]) < slot(grid[j])
+		}
+		return grid[i] < grid[j]
+	})
+	return finish, grid, dnf
+}
+
 // sessionTime parses a calendar date and UTC time. A missing time is not
 // a session start.
 func sessionTime(date, clock string) (time.Time, bool) {
@@ -236,6 +277,13 @@ func (d Data) Due(now time.Time) (string, bool) {
 		if len(r.Quali) > 0 && len(r.Grid) == 0 && !r.HasResults {
 			if race, ok := r.Sessions["Race"]; !ok || now.Before(race) {
 				return fmt.Sprintf("round %d has qualified and the official grid is not in yet", r.Round), true
+			}
+		}
+		if r.HasSprint && len(r.Sprint) == 0 && !r.HasResults {
+			if s, ok := r.Sessions["Sprint"]; ok && now.After(s.Add(sessionLength["Sprint"])) {
+				if race, ok := r.Sessions["Race"]; !ok || now.Before(race) {
+					return fmt.Sprintf("round %d sprint has run and its result is not in yet", r.Round), true
+				}
 			}
 		}
 	}

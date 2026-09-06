@@ -6,6 +6,7 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 	"sync"
@@ -85,8 +86,11 @@ type RoundView struct {
 	HasQuali bool `json:"has_quali"`
 	// HasGrid reports that the official starting grid, with penalties, is
 	// in the data; projections use it unless the caller supplies one.
-	HasGrid  bool                 `json:"has_grid"`
-	Sessions map[string]time.Time `json:"sessions,omitempty"`
+	HasGrid bool `json:"has_grid"`
+	// HasSprintResult reports that the sprint classification is in the
+	// data.
+	HasSprintResult bool                 `json:"has_sprint_result"`
+	Sessions        map[string]time.Time `json:"sessions,omitempty"`
 }
 
 // AssetView is one asset with its history.
@@ -138,7 +142,7 @@ func (e *Engine) Season() SeasonView {
 		v.Rounds = append(v.Rounds, RoundView{
 			Round: r.Round, Name: r.Name, CircuitID: r.CircuitID, Date: r.Date,
 			HasSprint: r.HasSprint, HasResults: r.HasResults,
-			HasQuali: len(r.Quali) > 0, HasGrid: r.GridOrder() != nil, Sessions: r.Sessions,
+			HasQuali: len(r.Quali) > 0, HasGrid: r.GridOrder() != nil, HasSprintResult: len(r.Sprint) > 0, Sessions: r.Sessions,
 		})
 	}
 	for _, a := range d.Assets {
@@ -174,6 +178,11 @@ type Conditions struct {
 	Grid  []string `json:"grid,omitempty"`
 	Back  []string `json:"back,omitempty"`
 	FP3   []string `json:"fp3,omitempty"`
+	// Sprint is the sprint classification with retired cars last;
+	// SprintGrid is the sprint grid; SprintDNF lists the retired cars.
+	Sprint     []string `json:"sprint,omitempty"`
+	SprintGrid []string `json:"sprint_grid,omitempty"`
+	SprintDNF  []string `json:"sprint_dnf,omitempty"`
 }
 
 func (c Conditions) toModel() model.Conditions {
@@ -187,13 +196,38 @@ func (c Conditions) toModel() model.Conditions {
 		}
 		return out
 	}
+	toSet := func(list []string) map[string]bool {
+		if len(list) == 0 {
+			return nil
+		}
+		out := map[string]bool{}
+		for _, tla := range list {
+			out[strings.ToUpper(strings.TrimSpace(tla))] = true
+		}
+		return out
+	}
 	var back []string
 	for _, tla := range c.Back {
 		back = append(back, strings.ToUpper(strings.TrimSpace(tla)))
 	}
-	return model.Conditions{
+	mc := model.Conditions{
 		Quali: toPos(c.Quali), Grid: toPos(c.Grid), BackOfGrid: back, Practice: toPos(c.FP3),
+		SprintGrid: toPos(c.SprintGrid), SprintDNF: toSet(c.SprintDNF),
 	}
+	// A retired car takes no classified sprint position.
+	if len(c.Sprint) > 0 {
+		mc.SprintFinish = map[string]int{}
+		pos := 1
+		for _, tla := range c.Sprint {
+			t := strings.ToUpper(strings.TrimSpace(tla))
+			if mc.SprintDNF[t] {
+				continue
+			}
+			mc.SprintFinish[t] = pos
+			pos++
+		}
+	}
+	return mc
 }
 
 func (c Conditions) key() string {
@@ -219,31 +253,48 @@ type ProjectionView struct {
 	// Conditions is the state the simulation used, including any
 	// qualifying order filled in from the official data.
 	Conditions Conditions `json:"conditions"`
-	// QualiFromData and GridFromData report that the qualifying order or
-	// the starting grid came from the official data rather than the caller.
-	QualiFromData bool              `json:"quali_from_data"`
-	GridFromData  bool              `json:"grid_from_data"`
-	Assets        []AssetProjection `json:"assets"`
+	// QualiFromData, GridFromData, and SprintFromData report which parts of
+	// the weekend state came from the official data rather than the caller.
+	QualiFromData  bool              `json:"quali_from_data"`
+	GridFromData   bool              `json:"grid_from_data"`
+	SprintFromData bool              `json:"sprint_from_data"`
+	Assets         []AssetProjection `json:"assets"`
 }
 
-// withKnownWeekend fills an empty qualifying order and an empty grid from
-// the official data: the published grid before the race, the race
-// classification after it. The grid carries every penalty, so it takes
-// precedence over back-of-grid hints.
-func withKnownWeekend(target dataset.Round, cond Conditions) (c Conditions, quali, grid bool) {
+// known records which parts of the weekend state came from the data.
+type known struct{ quali, grid, sprint bool }
+
+// withKnownWeekend fills an empty qualifying order, grid, and sprint result
+// from the official data: the published grid before the race, the race
+// classification after it, the sprint classification once the sprint has
+// run. The grid carries every penalty, so it takes precedence over
+// back-of-grid hints.
+func withKnownWeekend(target dataset.Round, cond Conditions) (Conditions, known) {
+	var k known
 	if len(cond.Quali) == 0 {
 		if order := target.QualiOrder(); order != nil {
 			cond.Quali = order
-			quali = true
+			k.quali = true
 		}
 	}
 	if len(cond.Grid) == 0 {
 		if order := target.GridOrder(); order != nil {
 			cond.Grid = order
-			grid = true
+			k.grid = true
 		}
 	}
-	return cond, quali, grid
+	if target.HasSprint && len(cond.Sprint) == 0 {
+		if finish, grid, dnf := target.SprintOrder(); finish != nil {
+			cond.Sprint, cond.SprintGrid = finish, grid
+			cond.SprintDNF = nil
+			for tla := range dnf {
+				cond.SprintDNF = append(cond.SprintDNF, tla)
+			}
+			sort.Strings(cond.SprintDNF)
+			k.sprint = true
+		}
+	}
+	return cond, k
 }
 
 // AssetProjection is one asset's projected distribution plus market data.
@@ -353,10 +404,10 @@ func (e *Engine) Project(in ProjectInput) (ProjectionView, error) {
 	if err != nil {
 		return ProjectionView{}, err
 	}
-	cond, qualiFromData, gridFromData := withKnownWeekend(target, in.Conditions)
+	cond, k := withKnownWeekend(target, in.Conditions)
 	sim := e.simulate(target, in.Sims, in.Seed, cond)
 	view := e.projectionView(target, sim, cond)
-	view.QualiFromData, view.GridFromData = qualiFromData, gridFromData
+	view.QualiFromData, view.GridFromData, view.SprintFromData = k.quali, k.grid, k.sprint
 	return view, nil
 }
 
@@ -458,7 +509,7 @@ func (e *Engine) Optimize(in OptimizeInput) (OptimizeView, error) {
 	if in.Risk == "" {
 		in.Risk = "mean"
 	}
-	cond, qualiFromData, gridFromData := withKnownWeekend(target, in.Conditions)
+	cond, k := withKnownWeekend(target, in.Conditions)
 	in.Conditions = cond
 	sim := e.simulate(target, in.Sims, in.Seed, cond)
 	pick := func(p model.Projection) float64 {
@@ -517,7 +568,7 @@ func (e *Engine) Optimize(in OptimizeInput) (OptimizeView, error) {
 		Round: target.Round, Name: target.Name, Risk: in.Risk, Chip: in.Chip, Budget: opt.Budget,
 		Projection: e.projectionView(target, sim, cond),
 	}
-	view.Projection.QualiFromData, view.Projection.GridFromData = qualiFromData, gridFromData
+	view.Projection.QualiFromData, view.Projection.GridFromData, view.Projection.SprintFromData = k.quali, k.grid, k.sprint
 	for _, t := range teams {
 		view.Teams = append(view.Teams, teamView(t, current))
 	}
@@ -538,6 +589,147 @@ func (e *Engine) Optimize(in OptimizeInput) (OptimizeView, error) {
 		}
 	}
 	return view, nil
+}
+
+// --- review -----------------------------------------------------------------
+
+// ReviewInput asks for a post-round review. A zero Round means the latest
+// finished round. Team is optional: the asset IDs the player held.
+type ReviewInput struct {
+	Round int      `json:"round"`
+	Sims  int      `json:"sims"`
+	Seed  uint64   `json:"seed"`
+	Team  []string `json:"team"`
+	// Captain is the driver that carried the Boost. When empty, the
+	// review assumes the Boost was on the team's best projected driver.
+	Captain string `json:"captain"`
+}
+
+// ReviewAsset is one asset's projection against its actual score.
+type ReviewAsset struct {
+	ID        string  `json:"id"`
+	Name      string  `json:"name"`
+	Kind      string  `json:"kind"`
+	TLA       string  `json:"tla,omitempty"`
+	TeamName  string  `json:"team_name"`
+	Price     float64 `json:"price"`
+	Ownership float64 `json:"ownership"`
+	Projected float64 `json:"projected"`
+	SD        float64 `json:"sd"`
+	P10       float64 `json:"p10"`
+	P90       float64 `json:"p90"`
+	Actual    float64 `json:"actual"`
+	Delta     float64 `json:"delta"` // actual minus projected
+	Z         float64 `json:"z"`     // delta in standard deviations
+	InRange   bool    `json:"in_range"`
+	Held      bool    `json:"held"` // on the reviewed team
+}
+
+// ReviewView is the post-round review.
+type ReviewView struct {
+	Round     int           `json:"round"`
+	Name      string        `json:"name"`
+	HasSprint bool          `json:"has_sprint"`
+	Sims      int           `json:"sims"`
+	Assets    []ReviewAsset `json:"assets"`   // ordered by |delta|, largest first
+	Coverage  float64       `json:"coverage"` // share of drivers inside P10–P90
+	DriverMAE float64       `json:"driver_mae"`
+
+	// Team review, when a team was given.
+	TeamProjected float64 `json:"team_projected"`
+	TeamActual    float64 `json:"team_actual"`
+	CaptainID     string  `json:"captain_id,omitempty"`
+	// Hindsight is the best team that was possible at the round's prices.
+	HindsightPts float64 `json:"hindsight_points"`
+}
+
+// Review compares the grid-known projection of a finished round with the
+// official points.
+func (e *Engine) Review(in ReviewInput) (ReviewView, error) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	completed := e.data.CompletedRounds()
+	if len(completed) == 0 {
+		return ReviewView{}, fmt.Errorf("no completed rounds")
+	}
+	target := completed[len(completed)-1]
+	if in.Round > 0 {
+		found := false
+		for _, c := range completed {
+			if c.Round == in.Round {
+				target, found = c, true
+			}
+		}
+		if !found {
+			return ReviewView{}, fmt.Errorf("round %d has no results", in.Round)
+		}
+	}
+	cond, _ := withKnownWeekend(target, Conditions{})
+	sim := e.simulate(target, in.Sims, in.Seed, cond)
+
+	held := map[string]bool{}
+	for _, id := range in.Team {
+		held[id] = true
+	}
+	v := ReviewView{Round: target.Round, Name: target.Name, HasSprint: target.HasSprint, Sims: sim.Sims}
+	var drivers, inRange float64
+	bestHeld := math.Inf(-1)
+	for _, a := range e.data.Assets {
+		h, ok := a.RoundHistory(target.Round)
+		if !ok {
+			continue
+		}
+		p, ok := sim.ByID(a.ID)
+		if !ok {
+			continue
+		}
+		ra := ReviewAsset{
+			ID: a.ID, Name: a.Name, Kind: string(a.Kind), TLA: a.TLA, TeamName: teamName(a),
+			Price: h.Price, Ownership: h.Ownership,
+			Projected: p.Mean, SD: p.SD, P10: p.P10, P90: p.P90, Actual: h.Points,
+			Delta: h.Points - p.Mean, Held: held[a.ID],
+		}
+		if p.SD > 0 {
+			ra.Z = ra.Delta / p.SD
+		}
+		ra.InRange = h.Points >= p.P10 && h.Points <= p.P90
+		if a.Kind == dataset.KindDriver {
+			drivers++
+			v.DriverMAE += math.Abs(ra.Delta)
+			if ra.InRange {
+				inRange++
+			}
+			if held[a.ID] && (in.Captain == a.ID || (in.Captain == "" && p.Mean > bestHeld)) {
+				if in.Captain == "" {
+					bestHeld = p.Mean
+				}
+				v.CaptainID = a.ID
+			}
+		}
+		if held[a.ID] {
+			v.TeamProjected += p.Mean
+			v.TeamActual += h.Points
+		}
+		v.Assets = append(v.Assets, ra)
+	}
+	if drivers > 0 {
+		v.Coverage = inRange / drivers
+		v.DriverMAE /= drivers
+	}
+	if v.CaptainID != "" {
+		for _, ra := range v.Assets {
+			if ra.ID == v.CaptainID {
+				v.TeamProjected += ra.Projected
+				v.TeamActual += ra.Actual
+			}
+		}
+	}
+	sort.Slice(v.Assets, func(i, j int) bool { return math.Abs(v.Assets[i].Delta) > math.Abs(v.Assets[j].Delta) })
+
+	if hv, err := e.hindsight(target, 1); err == nil && len(hv.Teams) > 0 {
+		v.HindsightPts = hv.Teams[0].Score
+	}
+	return v, nil
 }
 
 // --- prices -----------------------------------------------------------------
@@ -608,6 +800,12 @@ func (e *Engine) Hindsight(round, top int) (HindsightView, error) {
 			return HindsightView{}, fmt.Errorf("round %d has no results", round)
 		}
 	}
+	return e.hindsight(target, top)
+}
+
+// hindsight enumerates the best teams for a finished round. The caller
+// holds the read lock.
+func (e *Engine) hindsight(target dataset.Round, top int) (HindsightView, error) {
 	if top <= 0 {
 		top = 5
 	}

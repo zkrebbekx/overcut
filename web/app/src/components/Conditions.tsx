@@ -11,7 +11,7 @@ function parse(s: string): string[] {
     .filter(Boolean);
 }
 
-export function ConditionsPanel({ season, value, onChange, officialQuali, officialGrid }: { season: SeasonView; value: Conditions; onChange: (c: Conditions) => void; officialQuali?: boolean; officialGrid?: boolean }) {
+export function ConditionsPanel({ season, value, onChange, officialQuali, officialGrid, sprintResult }: { season: SeasonView; value: Conditions; onChange: (c: Conditions) => void; officialQuali?: boolean; officialGrid?: boolean; sprintResult?: boolean }) {
   const known = new Set(season.assets.filter((a) => a.kind === "driver" && a.selectable).map((a) => a.tla));
   const field = (key: keyof Conditions, label: string, hint: string) => {
     const text = (value[key] ?? []).join(", ");
@@ -45,6 +45,7 @@ export function ConditionsPanel({ season, value, onChange, officialQuali, offici
       {field("grid", "Starting grid (after penalties)", officialGrid ? "official grid in use" : "leave blank to derive from qualifying")}
       {field("back", "Back of grid", officialGrid ? "not needed: official grid in use" : "ANT, ALB")}
       {field("fp3", "FP3 order (pace prior)", "RUS, HAM, VER, …")}
+      {sprintResult && <p className="text-xs text-gain">Sprint result loaded: the sprint leg is scored from the official classification.</p>}
       <button onClick={() => onChange({})} className="text-xs text-ink-3 underline-offset-2 hover:text-ink hover:underline">
         Clear weekend state
       </button>

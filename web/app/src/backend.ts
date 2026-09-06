@@ -2,7 +2,14 @@
 // runs the same engine as WebAssembly inside a Web Worker. Both expose the
 // same typed interface.
 
-import type { BacktestReport, Conditions, HindsightView, OptimizeInput, OptimizeView, PricesView, ProjectionView, RulesView, SeasonView } from "./api";
+import type { BacktestReport, Conditions, HindsightView, OptimizeInput, OptimizeView, PricesView, ProjectionView, ReviewView, RulesView, SeasonView } from "./api";
+
+export interface ReviewInput {
+  round: number;
+  sims?: number;
+  team?: string[];
+  captain?: string;
+}
 
 export interface Backend {
   readonly kind: "api" | "wasm";
@@ -13,6 +20,7 @@ export interface Backend {
   prices(): Promise<PricesView>;
   backtest(sims?: number): Promise<BacktestReport>;
   hindsight(round: number, top?: number): Promise<HindsightView>;
+  review(input: ReviewInput): Promise<ReviewView>;
   sync?(): Promise<SeasonView>;
 }
 
@@ -54,6 +62,7 @@ export const apiBackend: Backend = {
   prices: () => get("/api/prices"),
   backtest: (sims = 3000) => get(`/api/backtest?sims=${sims}`),
   hindsight: (round, top = 5) => get(`/api/hindsight?round=${round}&top=${top}`),
+  review: (input) => post("/api/review", input),
   sync: () => post("/api/sync", {}),
 };
 
@@ -90,6 +99,7 @@ class WasmBackend implements Backend {
   prices = () => this.call<PricesView>("prices");
   backtest = (sims = 3000) => this.call<BacktestReport>("backtest", sims);
   hindsight = (round: number, top = 5) => this.call<HindsightView>("hindsight", round, top);
+  review = (input: ReviewInput) => this.call<ReviewView>("review", JSON.stringify(input));
 }
 
 export const isStatic = import.meta.env.VITE_STATIC === "1";

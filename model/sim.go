@@ -55,6 +55,14 @@ type Conditions struct {
 	// prior when qualifying is unknown. Half the weight goes to practice
 	// and half to season form.
 	Practice map[string]int
+
+	// SprintGrid and SprintFinish are the actual sprint grid and sprint
+	// classification (1-based) on a sprint weekend, once the sprint has
+	// run. SprintDNF lists the cars that did not classify. When
+	// SprintFinish is set the model does not sample the sprint leg.
+	SprintGrid   map[string]int
+	SprintFinish map[string]int
+	SprintDNF    map[string]bool
 }
 
 // GridInfluence is the weight of the grid slot in the race finish score.
@@ -195,7 +203,20 @@ func (m Model) SimulateWith(round int, hasSprint bool, sims int, seed uint64, co
 
 		var sqPos, sprintPos []int
 		var sprintDNF []bool
-		if hasSprint {
+		if hasSprint && len(cond.SprintFinish) > 0 {
+			// The sprint has run: use its grid and classification.
+			sqPos = make([]int, n)
+			sprintPos = make([]int, n)
+			sprintDNF = make([]bool, n)
+			for i, dm := range m.Drivers {
+				sqPos[i] = cond.SprintGrid[dm.TLA]
+				if sqPos[i] == 0 {
+					sqPos[i] = n
+				}
+				sprintPos[i] = cond.SprintFinish[dm.TLA]
+				sprintDNF[i] = cond.SprintDNF[dm.TLA] || sprintPos[i] == 0
+			}
+		} else if hasSprint {
 			for i, dm := range m.Drivers {
 				scores[i] = dm.QualiMu + rng.NormFloat64()*dm.QualiSD
 			}

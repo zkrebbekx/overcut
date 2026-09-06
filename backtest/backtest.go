@@ -35,6 +35,11 @@ type RoundResult struct {
 	GridSpearmanRho float64
 	GridTeamPts     float64
 
+	// Coverage is the share of drivers whose actual points fell inside the
+	// projected P10–P90 range; a calibrated model scores about 0.8.
+	Coverage     float64
+	GridCoverage float64
+
 	// Team points: what the projected optimal team really scored versus
 	// the hindsight optimum and versus a naive team.
 	ModelTeamPts     float64
@@ -55,6 +60,8 @@ type Report struct {
 	GridDriverMAE    float64 // with qualifying and grid known
 	GridMeanSpearman float64
 	GridTeamPts      float64
+	Coverage         float64 // share of drivers inside P10–P90, pre-qualifying
+	GridCoverage     float64 // the same with the grid known
 
 	ModelTeamPts     float64
 	NaiveTeamPts     float64
@@ -76,10 +83,24 @@ func Run(d dataset.Data, cfg rules.Config, sims int, seed uint64) Report {
 		m := model.Fit(d, cfg, round.Round-1)
 		sim := m.Simulate(round.Round, round.HasSprint, sims, seed)
 		// The Sunday-morning forecast: qualifying and the official grid known.
-		gridSim := m.SimulateWith(round.Round, round.HasSprint, sims, seed, model.Conditions{
+		gridCond := model.Conditions{
 			Quali: positions(round.QualiOrder()),
 			Grid:  positions(round.GridOrder()),
-		})
+		}
+		if finish, sgrid, dnf := round.SprintOrder(); finish != nil {
+			gridCond.SprintGrid = positions(sgrid)
+			gridCond.SprintDNF = dnf
+			gridCond.SprintFinish = map[string]int{}
+			pos := 1
+			for _, tla := range finish {
+				if dnf[tla] {
+					continue
+				}
+				gridCond.SprintFinish[tla] = pos
+				pos++
+			}
+		}
+		gridSim := m.SimulateWith(round.Round, round.HasSprint, sims, seed, gridCond)
 
 		rr := RoundResult{Round: round.Round, Name: round.Name}
 
@@ -99,6 +120,12 @@ func Run(d dataset.Data, cfg rules.Config, sims int, seed uint64) Report {
 			if a.Kind == dataset.KindDriver {
 				rr.DriverMAE += err
 				rr.GridDriverMAE += math.Abs(gproj.Mean - actual.Points)
+				if actual.Points >= proj.P10 && actual.Points <= proj.P90 {
+					rr.Coverage++
+				}
+				if actual.Points >= gproj.P10 && actual.Points <= gproj.P90 {
+					rr.GridCoverage++
+				}
 				nD++
 				projD = append(projD, proj.Mean)
 				gridD = append(gridD, gproj.Mean)
@@ -114,6 +141,8 @@ func Run(d dataset.Data, cfg rules.Config, sims int, seed uint64) Report {
 		if nD > 0 {
 			rr.DriverMAE /= nD
 			rr.GridDriverMAE /= nD
+			rr.Coverage /= nD
+			rr.GridCoverage /= nD
 		}
 		if nC > 0 {
 			rr.ConsMAE /= nC
@@ -140,6 +169,8 @@ func Run(d dataset.Data, cfg rules.Config, sims int, seed uint64) Report {
 		rep.GridDriverMAE += rr.GridDriverMAE / n
 		rep.GridMeanSpearman += rr.GridSpearmanRho / n
 		rep.GridTeamPts += rr.GridTeamPts / n
+		rep.Coverage += rr.Coverage / n
+		rep.GridCoverage += rr.GridCoverage / n
 		rep.ModelTeamPts += rr.ModelTeamPts / n
 		rep.NaiveTeamPts += rr.NaiveTeamPts / n
 		rep.HindsightTeamPts += rr.HindsightTeamPts / n
