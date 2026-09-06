@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "synced_at": "2026-09-06T20:43:58.609275383Z",
+ "synced_at": "2026-09-06T21:10:50.571381005Z",
  "rounds": [
   {
    "round": 1,
@@ -2389,7 +2389,7 @@
    "circuit_id": "monza",
    "date": "2026-09-06",
    "has_sprint": false,
-   "has_results": false,
+   "has_results": true,
    "sessions": {
     "FP1": "2026-09-04T10:30:00Z",
     "FP2": "2026-09-04T14:00:00Z",
@@ -2421,29 +2421,117 @@
     "TSU": 17,
     "VER": 6
    },
-   "grid": {
-    "ALB": 20,
-    "ALO": 21,
-    "ANT": 19,
-    "BEA": 11,
-    "BOR": 10,
-    "BOT": 16,
-    "COL": 7,
-    "GAS": 1,
-    "HAM": 4,
-    "HUL": 12,
-    "LAW": 22,
-    "LEC": 3,
-    "LIN": 9,
-    "NOR": 8,
-    "OCO": 14,
-    "PER": 17,
-    "PIA": 6,
-    "RUS": 2,
-    "SAI": 13,
-    "STR": 18,
-    "TSU": 15,
-    "VER": 5
+   "race": {
+    "ALB": {
+     "grid": 0,
+     "pos": 17,
+     "dnf": false
+    },
+    "ALO": {
+     "grid": 0,
+     "pos": 21,
+     "dnf": true
+    },
+    "ANT": {
+     "grid": 0,
+     "pos": 1,
+     "dnf": false
+    },
+    "BEA": {
+     "grid": 0,
+     "pos": 15,
+     "dnf": false
+    },
+    "BOR": {
+     "grid": 0,
+     "pos": 11,
+     "dnf": false
+    },
+    "BOT": {
+     "grid": 0,
+     "pos": 19,
+     "dnf": false
+    },
+    "COL": {
+     "grid": 0,
+     "pos": 9,
+     "dnf": false
+    },
+    "GAS": {
+     "grid": 0,
+     "pos": 7,
+     "dnf": false
+    },
+    "HAM": {
+     "grid": 0,
+     "pos": 6,
+     "dnf": false
+    },
+    "HUL": {
+     "grid": 0,
+     "pos": 12,
+     "dnf": false
+    },
+    "LAW": {
+     "grid": 0,
+     "pos": 14,
+     "dnf": false
+    },
+    "LEC": {
+     "grid": 0,
+     "pos": 22,
+     "dnf": true
+    },
+    "LIN": {
+     "grid": 0,
+     "pos": 8,
+     "dnf": false
+    },
+    "NOR": {
+     "grid": 0,
+     "pos": 4,
+     "dnf": false
+    },
+    "OCO": {
+     "grid": 0,
+     "pos": 16,
+     "dnf": false
+    },
+    "PER": {
+     "grid": 0,
+     "pos": 18,
+     "dnf": false
+    },
+    "PIA": {
+     "grid": 0,
+     "pos": 5,
+     "dnf": false
+    },
+    "RUS": {
+     "grid": 0,
+     "pos": 2,
+     "dnf": false
+    },
+    "SAI": {
+     "grid": 0,
+     "pos": 13,
+     "dnf": false
+    },
+    "STR": {
+     "grid": 0,
+     "pos": 20,
+     "dnf": true
+    },
+    "TSU": {
+     "grid": 0,
+     "pos": 10,
+     "dnf": false
+    },
+    "VER": {
+     "grid": 0,
+     "pos": 3,
+     "dnf": false
+    }
    }
   },
   {
