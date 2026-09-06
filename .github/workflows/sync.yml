@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: sync
@@ -39,11 +40,13 @@ jobs:
             go run ./cmd/overcut sync -when-due -data data/season2026.json
           fi
       - name: Commit if changed
+        id: commit
         run: |
           # The synced_at stamp changes every run; only commit when the
           # results, prices, or points moved.
           if git diff --quiet -I '"synced_at"' -- data/season2026.json; then
             echo "no data change"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "overcut-sync"
@@ -51,3 +54,11 @@ jobs:
           git add data/season2026.json
           git commit -m "data: sync season"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      # A push made with the Actions token does not trigger other
+      # workflows, so start the site build explicitly.
+      - name: Deploy the site
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref main
