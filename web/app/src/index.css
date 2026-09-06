@@ -8,17 +8,18 @@
   --color-ink: #f2f4f7;
   --color-ink-2: #a7afbc;
   --color-ink-3: #6b7280;
-  /* Brand accent: a warm racing red, shifted toward orange so it stays
-     distinct from the Ferrari livery stripe and clears 4.5:1 on both
-     surfaces. It colours chrome only: navigation, actions, focus. */
-  --color-accent: #ff4d3d;
-  --color-accent-dim: #8f2a21;
-  /* Data marks stay in the blue family so charts never read as alarms. */
+  /* Brand accent: the timing-screen purple that means "fastest". Lifted
+     from the broadcast shade so it clears 4.5:1 on both surfaces (6.2:1
+     on the background). It colours chrome and "best" markers only:
+     navigation, actions, focus, the Boost, the recommended team. */
+  --color-accent: #b76eff;
+  --color-accent-dim: #4a2a80;
+  /* Data marks stay blue so a chart never borrows the accent's meaning. */
   --color-mark: #3987e5;
   --color-mark-dim: #1f4f8a;
-  /* Gain and loss: green and amber. Red is reserved for the brand. */
+  /* Gain and loss: green and coral, each always paired with an arrow. */
   --color-gain: #22b37e;
-  --color-loss: #e6a11f;
+  --color-loss: #e66767;
   --color-warn: #fbbf24;
 
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;

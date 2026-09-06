@@ -76,16 +76,16 @@ panel with the gameday history (points and price).
 - **Surfaces:** background `#0B0D10`, panel `#14171C`, raised `#1B1F26`,
   border `#262B33`.
 - **Text:** primary `#F2F4F7`, secondary `#A7AFBC`, muted `#6B7280`.
-- **Accent:** `#FF4D3D`, a racing red shifted toward orange. It colours
-  chrome only — the brand mark, active navigation, primary actions,
-  selection, focus — never data. The shift keeps it apart from the
-  Ferrari livery stripe and clears 4.5:1 on both surfaces.
+- **Accent:** `#B76EFF`, the timing-screen purple that every fan reads as
+  "fastest". It colours chrome and "best" markers only — the brand mark,
+  active navigation, primary actions, focus, the Boost, the recommended
+  team — never a data series. No team livery uses it, and it clears
+  6.2:1 on the background.
 - **Marks:** `#3987E5` for the mean tick and the primary chart series, so
-  a chart never reads as an alarm.
-- **Gain / loss:** `#22B37E` / `#E6A11F` (green / amber). Red is reserved
-  for the brand, so a loss can never be mistaken for a selection. The
-  pair passes colour-vision separation, and every gain or loss also
-  carries a sign or an arrow.
+  a chart never borrows the accent's meaning.
+- **Gain / loss:** `#22B37E` / `#E66767` (green / coral). The pair passes
+  colour-vision separation with the arrow as secondary encoding, and
+  every gain or loss carries a sign or an arrow.
 - **Warning:** `#FBBF24` (unknown weekend state, stale data).
 - **Team colors** appear only as a 3-pixel left edge on asset chips, never
   as chrome.
