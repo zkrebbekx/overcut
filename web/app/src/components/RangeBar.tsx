@@ -12,9 +12,9 @@ export function RangeBar({ p10, p50, p90, mean, min, max }: { p10: number; p50: 
       aria-label={`P10 ${p10.toFixed(0)}, median ${p50.toFixed(0)}, mean ${mean.toFixed(1)}, P90 ${p90.toFixed(0)}`}
     >
       {zero && <div className="absolute top-0 h-full w-px bg-line" style={{ left: zero }} />}
-      <div className="absolute top-[7px] h-[6px] rounded-full bg-accent-dim" style={{ left: x(p10), width: `calc(${x(p90)} - ${x(p10)})` }} />
+      <div className="absolute top-[7px] h-[6px] rounded-full bg-mark-dim" style={{ left: x(p10), width: `calc(${x(p90)} - ${x(p10)})` }} />
       <div className="absolute top-[8px] h-[4px] w-[4px] rounded-full bg-ink" style={{ left: `calc(${x(p50)} - 2px)` }} />
-      <div className="absolute top-[3px] h-[14px] w-[2px] rounded-sm bg-accent" style={{ left: `calc(${x(mean)} - 1px)` }} />
+      <div className="absolute top-[3px] h-[14px] w-[2px] rounded-sm bg-mark" style={{ left: `calc(${x(mean)} - 1px)` }} />
     </div>
   );
 }

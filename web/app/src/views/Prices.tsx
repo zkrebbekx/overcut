@@ -43,7 +43,7 @@ export function PricesView() {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Predictor error" value={`$${data.report.MAE.toFixed(2)}M`} sub={`vs $${data.report.NaiveMAE.toFixed(2)}M if you assume no change`} tone="accent" />
+        <Stat label="Predictor error" value={`$${data.report.MAE.toFixed(2)}M`} sub={`vs $${data.report.NaiveMAE.toFixed(2)}M if you assume no change`} tone="mark" />
         <Stat label="Direction hit rate" value={`${(data.report.Direction * 100).toFixed(0)}%`} sub={`on ${data.report.Moves} real moves this season`} />
         <Stat label="How it works" value={<span className="text-base font-normal text-ink-2">Last-3-round form, fitted on this season's moves</span>} />
       </div>

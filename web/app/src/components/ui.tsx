@@ -16,8 +16,8 @@ export function Card({ title, right, children, className = "" }: { title?: React
   );
 }
 
-export function Stat({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "gain" | "loss" | "accent" }) {
-  const color = tone === "gain" ? "text-gain" : tone === "loss" ? "text-loss" : tone === "accent" ? "text-accent" : "text-ink";
+export function Stat({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "gain" | "loss" | "accent" | "mark" }) {
+  const color = tone === "gain" ? "text-gain" : tone === "loss" ? "text-loss" : tone === "accent" ? "text-accent" : tone === "mark" ? "text-mark" : "text-ink";
   return (
     <div className="card p-4">
       <div className="text-xs uppercase tracking-[0.12em] text-ink-3">{label}</div>

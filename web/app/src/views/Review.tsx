@@ -63,7 +63,7 @@ export function ReviewView({ season, state }: { season: SeasonView; state: Playe
       {data && (
         <>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat label="Driver error this round" value={`±${data.driver_mae.toFixed(1)}`} sub="mean absolute error, grid known" tone="accent" />
+            <Stat label="Driver error this round" value={`±${data.driver_mae.toFixed(1)}`} sub="mean absolute error, grid known" tone="mark" />
             <Stat label="Inside the P10–P90 range" value={`${(data.coverage * 100).toFixed(0)}%`} sub="of drivers · a calibrated range covers 80%" />
             {heldCount === 7 ? (
               <Stat label="Your team" value={data.team_actual.toFixed(0)} sub={`projected ${data.team_projected.toFixed(0)} · ${data.captain_id ? "Boost on the best projected driver" : ""}`} tone={data.team_actual >= data.team_projected ? "gain" : "loss"} />

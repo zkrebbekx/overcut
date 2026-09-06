@@ -8,10 +8,17 @@
   --color-ink: #f2f4f7;
   --color-ink-2: #a7afbc;
   --color-ink-3: #6b7280;
-  --color-accent: #3ed0ff;
-  --color-accent-dim: #1d6f8a;
+  /* Brand accent: a warm racing red, shifted toward orange so it stays
+     distinct from the Ferrari livery stripe and clears 4.5:1 on both
+     surfaces. It colours chrome only: navigation, actions, focus. */
+  --color-accent: #ff4d3d;
+  --color-accent-dim: #8f2a21;
+  /* Data marks stay in the blue family so charts never read as alarms. */
+  --color-mark: #3987e5;
+  --color-mark-dim: #1f4f8a;
+  /* Gain and loss: green and amber. Red is reserved for the brand. */
   --color-gain: #22b37e;
-  --color-loss: #e66767;
+  --color-loss: #e6a11f;
   --color-warn: #fbbf24;
 
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
