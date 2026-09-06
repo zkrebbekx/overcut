@@ -1,17 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #0b0d10;
-  --color-panel: #14171c;
-  --color-raised: #1b1f26;
-  --color-line: #262b33;
+  /* Carbon surfaces: neutral blacks rather than blue-blacks, so white text
+     and the accent read richer. */
+  --color-bg: #0f0f10;
+  --color-panel: #171718;
+  --color-raised: #1f1f21;
+  --color-line: #2a2a2e;
   --color-ink: #f2f4f7;
   --color-ink-2: #a7afbc;
   --color-ink-3: #6b7280;
-  /* Brand accent: the timing-screen purple that means "fastest". Lifted
-     from the broadcast shade so it clears 4.5:1 on both surfaces (6.2:1
-     on the background). It colours chrome and "best" markers only:
-     navigation, actions, focus, the Boost, the recommended team. */
+  /* Accent: the timing-screen purple that means "fastest". Lifted from
+     the broadcast shade so it clears 4.5:1 on both surfaces (6.2:1 on the
+     background). It marks only the best thing on a screen — the
+     recommended team, the Boost, the #1 row — never chrome. Chrome
+     (navigation, actions, selection, focus) is white. */
   --color-accent: #b76eff;
   --color-accent-dim: #4a2a80;
   /* Data marks stay blue so a chart never borrows the accent's meaning. */
@@ -92,7 +95,7 @@ body {
 }
 
 *:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-ink);
   outline-offset: 2px;
 }
 

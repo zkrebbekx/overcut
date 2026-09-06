@@ -98,11 +98,12 @@ export function ProjectionsView({ season, round, state }: { season: SeasonView; 
                 {rows.map((a) => {
                   const mine = state.team.includes(a.id);
                   return (
-                    <tr key={a.id} onClick={() => setOpen(a.id)} className={`cursor-pointer border-t border-line/60 hover:bg-raised/50 ${mine ? "bg-accent/5" : ""}`}>
+                    <tr key={a.id} onClick={() => setOpen(a.id)} className={`cursor-pointer border-t border-line/60 hover:bg-raised/50 ${mine ? "bg-raised/60" : ""}`}>
                       <td className="py-1.5 pr-3">
                         <span className="flex items-center">
                           <TeamEdge team={a.team_name} />
-                          <span className={mine ? "text-accent" : "text-ink"}>{a.name}</span>
+                          <span className={mine ? "font-semibold text-ink" : "text-ink"}>{a.name}</span>
+                          {mine && <span className="ml-2 text-[10px] uppercase tracking-wider text-ink-3">yours</span>}
                           {a.kind === "constructor" && <span className="ml-2 text-[10px] uppercase text-ink-3">team</span>}
                         </span>
                       </td>

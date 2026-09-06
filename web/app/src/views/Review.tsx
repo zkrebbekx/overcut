@@ -149,11 +149,12 @@ export function ReviewView({ season, state }: { season: SeasonView; state: Playe
                 </thead>
                 <tbody>
                   {rows.map((a) => (
-                    <tr key={a.id} className={`border-t border-line/60 ${a.held ? "bg-accent/5" : ""}`}>
+                    <tr key={a.id} className={`border-t border-line/60 ${a.held ? "bg-raised/60" : ""}`}>
                       <td className="py-1.5 pr-3">
                         <span className="flex items-center">
                           <TeamEdge team={a.team_name} />
-                          <span className={a.held ? "text-accent" : "text-ink"}>{a.name}</span>
+                          <span className={a.held ? "font-semibold text-ink" : "text-ink"}>{a.name}</span>
+                          {a.held && <span className="ml-2 text-[10px] uppercase tracking-wider text-ink-3">yours</span>}
                           {a.kind === "constructor" && <span className="ml-2 text-[10px] uppercase text-ink-3">team</span>}
                         </span>
                       </td>

@@ -90,7 +90,7 @@ export default function App() {
             aria-current={tab === t.id ? "page" : undefined}
             className={`mb-1 flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm transition ${tab === t.id ? "bg-raised text-ink" : "text-ink-2 hover:bg-raised/60 hover:text-ink"}`}
           >
-            <t.icon size={16} className={tab === t.id ? "text-accent" : ""} />
+            <t.icon size={16} className={tab === t.id ? "text-ink" : ""} />
             {t.label}
           </button>
         ))}
@@ -166,7 +166,7 @@ export default function App() {
             key={t.id}
             onClick={() => setTab(t.id)}
             aria-current={tab === t.id ? "page" : undefined}
-            className={`flex flex-1 flex-col items-center gap-1 py-2 text-[10px] ${tab === t.id ? "text-accent" : "text-ink-3"}`}
+            className={`flex flex-1 flex-col items-center gap-1 py-2 text-[10px] ${tab === t.id ? "text-ink" : "text-ink-3"}`}
           >
             <t.icon size={18} />
             {t.label}

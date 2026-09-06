@@ -48,7 +48,7 @@ export function Segmented<T extends string>({ value, options, onChange }: { valu
           role="radio"
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`rounded-[4px] px-3 py-1 text-xs font-medium transition ${value === o.value ? "bg-accent text-bg" : "text-ink-2 hover:text-ink"}`}
+          className={`rounded-[4px] px-3 py-1 text-xs font-medium transition ${value === o.value ? "bg-ink text-bg" : "text-ink-2 hover:text-ink"}`}
         >
           {o.label}
         </button>
@@ -109,7 +109,7 @@ export function NumberField({ value, onChange, step = 1, min, className = "", ar
 export function Spinner({ label }: { label: string }) {
   return (
     <div role="status" className="flex items-center gap-3 text-sm text-ink-2">
-      <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+      <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-ink border-t-transparent" />
       {label}
     </div>
   );
