@@ -221,63 +221,104 @@ func positional(table []int, pos int) int {
 	return table[pos-1]
 }
 
-// DriverPoints computes one driver's fantasy points for one weekend.
-func (c Config) DriverPoints(w DriverWeekend) int {
-	pts := 0
+// Breakdown is one driver's weekend points by scoring category. The No
+// Negative chip floors each category at zero separately.
+type Breakdown struct {
+	Quali          int
+	SprintResult   int
+	SprintPosition int // positions gained or lost in the sprint
+	SprintOvers    int
+	SprintFL       int
+	SprintDNF      int
+	RaceResult     int
+	RacePosition   int // positions gained or lost in the race
+	Overtakes      int
+	FastestLap     int
+	DOTD           int
+	RaceDNF        int
+}
+
+// Total sums every category.
+func (b Breakdown) Total() int {
+	return b.Quali + b.SprintResult + b.SprintPosition + b.SprintOvers + b.SprintFL + b.SprintDNF +
+		b.RaceResult + b.RacePosition + b.Overtakes + b.FastestLap + b.DOTD + b.RaceDNF
+}
+
+// NoNegative sums every category with each negative category floored at
+// zero, as the No Negative chip scores.
+func (b Breakdown) NoNegative() int {
+	floor := func(v int) int {
+		if v < 0 {
+			return 0
+		}
+		return v
+	}
+	return floor(b.Quali) + floor(b.SprintResult) + floor(b.SprintPosition) + floor(b.SprintOvers) + floor(b.SprintFL) + floor(b.SprintDNF) +
+		floor(b.RaceResult) + floor(b.RacePosition) + floor(b.Overtakes) + floor(b.FastestLap) + floor(b.DOTD) + floor(b.RaceDNF)
+}
+
+// DriverBreakdown computes one driver's fantasy points for one weekend by
+// category.
+func (c Config) DriverBreakdown(w DriverWeekend) Breakdown {
+	var b Breakdown
 
 	// Qualifying.
 	if w.QualiPos == 0 || w.QualiDSQ {
-		pts += c.QualiNoTime
+		b.Quali = c.QualiNoTime
 	} else {
-		pts += positional(c.QualiPoints, w.QualiPos)
+		b.Quali = positional(c.QualiPoints, w.QualiPos)
 	}
 
 	// Sprint. Sprint qualifying scores nothing. Overtakes score even when
 	// the driver retires. An unclassified driver takes the penalty and no
 	// position points.
 	if w.HasSprint {
-		pts += w.SprintOvers * c.Overtake
+		b.SprintOvers = w.SprintOvers * c.Overtake
 		if w.SprintDNF || w.SprintDSQ {
-			pts += c.SprintDNF
+			b.SprintDNF = c.SprintDNF
 		} else {
-			pts += positional(c.SprintPoints, w.SprintPos)
+			b.SprintResult = positional(c.SprintPoints, w.SprintPos)
 			delta := w.SprintGrid - w.SprintPos
 			if delta > 0 {
-				pts += delta * c.PositionGained
+				b.SprintPosition = delta * c.PositionGained
 			} else {
 				lost := -delta
 				if lost > c.SprintMaxLost {
 					lost = c.SprintMaxLost
 				}
-				pts += lost * c.PositionLost
+				b.SprintPosition = lost * c.PositionLost
 			}
 			if w.SprintFL {
-				pts += c.SprintFastestLap
+				b.SprintFL = c.SprintFastestLap
 			}
 		}
 	}
 
 	// Race. Same structure; positions lost are not capped.
-	pts += w.Overtakes * c.Overtake
+	b.Overtakes = w.Overtakes * c.Overtake
 	if w.DNF || w.RaceDSQ {
-		pts += c.RaceDNF
+		b.RaceDNF = c.RaceDNF
 	} else {
-		pts += positional(c.RacePoints, w.FinishPos)
+		b.RaceResult = positional(c.RacePoints, w.FinishPos)
 		delta := w.GridPos - w.FinishPos
 		if delta > 0 {
-			pts += delta * c.PositionGained
+			b.RacePosition = delta * c.PositionGained
 		} else {
-			pts += -delta * c.PositionLost
+			b.RacePosition = -delta * c.PositionLost
 		}
 		if w.FastestLap {
-			pts += c.FastestLap
+			b.FastestLap = c.FastestLap
 		}
 		if w.DOTD {
-			pts += c.DriverOfTheDay
+			b.DOTD = c.DriverOfTheDay
 		}
 	}
+	return b
+}
 
-	return pts
+// DriverPoints computes one driver's fantasy points for one weekend.
+func (c Config) DriverPoints(w DriverWeekend) int {
+	return c.DriverBreakdown(w).Total()
 }
 
 // PitStopPointsFor returns the points for a constructor's pit stop of the
@@ -318,7 +359,19 @@ func (c Config) ConstructorQualiBonusFor(inQ2, inQ3 int) int {
 // caller supplies it; the model package estimates it from the residual
 // between official constructor points and rule-derived points.
 func (c Config) ConstructorPoints(a, b DriverWeekend, pitStopPts int) int {
-	pts := c.DriverPoints(stripDriverOnly(a)) + c.DriverPoints(stripDriverOnly(b))
+	total, _ := c.ConstructorPointsBoth(a, b, pitStopPts)
+	return total
+}
+
+// ConstructorPointsBoth computes a constructor's points twice: as scored
+// normally, and as the No Negative chip scores them, with every negative
+// category floored at zero (each driver's categories, the qualifying
+// bonus, and the disqualification penalties).
+func (c Config) ConstructorPointsBoth(a, b DriverWeekend, pitStopPts int) (total, noNegative int) {
+	ba := c.DriverBreakdown(stripDriverOnly(a))
+	bb := c.DriverBreakdown(stripDriverOnly(b))
+	total = ba.Total() + bb.Total()
+	noNegative = ba.NoNegative() + bb.NoNegative()
 
 	inQ2, inQ3 := 0, 0
 	for _, w := range []DriverWeekend{a, b} {
@@ -329,18 +382,24 @@ func (c Config) ConstructorPoints(a, b DriverWeekend, pitStopPts int) int {
 			inQ3++
 		}
 		if w.QualiDSQ {
-			pts += c.ConstructorDSQ.Quali
+			total += c.ConstructorDSQ.Quali
 		}
 		if w.HasSprint && w.SprintDSQ {
-			pts += c.ConstructorDSQ.Sprint
+			total += c.ConstructorDSQ.Sprint
 		}
 		if w.RaceDSQ {
-			pts += c.ConstructorDSQ.Race
+			total += c.ConstructorDSQ.Race
 		}
 	}
-	pts += c.ConstructorQualiBonusFor(inQ2, inQ3)
-	pts += pitStopPts
-	return pts
+	bonus := c.ConstructorQualiBonusFor(inQ2, inQ3)
+	total += bonus + pitStopPts
+	if bonus > 0 {
+		noNegative += bonus
+	}
+	if pitStopPts > 0 {
+		noNegative += pitStopPts
+	}
+	return total, noNegative
 }
 
 // stripDriverOnly removes the awards that only a driver scores.

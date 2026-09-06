@@ -145,6 +145,19 @@ export interface TeamView {
   score: number;
   in: string[];
   out: string[];
+  p10: number;
+  p50: number;
+  p90: number;
+}
+
+export interface ChipValue {
+  chip: "nonegative" | "3x" | "autopilot" | "wildcard" | "limitless" | "finalfix";
+  label: string;
+  gain: number;
+  available: boolean;
+  note: string;
+  out_id?: string;
+  in_id?: string;
 }
 
 export interface OptimizeInput {
@@ -154,7 +167,7 @@ export interface OptimizeInput {
   team: string[];
   free_transfers: number;
   budget?: number;
-  chip?: "" | "wildcard" | "limitless" | "3x";
+  chip?: "" | "wildcard" | "limitless" | "3x" | "nonegative";
   risk?: "mean" | "p10" | "p90";
   top?: number;
   conditions?: Conditions;
@@ -169,6 +182,7 @@ export interface OptimizeView {
   teams: TeamView[];
   current_score: number;
   projection: ProjectionView;
+  chips: ChipValue[];
 }
 
 export interface PricePrediction {

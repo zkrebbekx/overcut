@@ -54,7 +54,7 @@ export function DecideView({ season, round, state, update }: { season: SeasonVie
 
   const best = result?.teams[pick];
   const projById = useMemo(() => new Map(result?.projection.assets.map((a) => [a.id, a]) ?? []), [result]);
-  const teamRange = useMemo(() => (best ? rangeOf(best, projById) : null), [best, projById]);
+  const teamRange = best ? { p10: best.p10, p50: best.p50, p90: best.p90 } : null;
   const keepDelta = best && complete ? best.score - result!.current_score : null;
   const moveIn = best?.in ?? [];
   const moveOut = best?.out ?? [];
@@ -105,7 +105,7 @@ export function DecideView({ season, round, state, update }: { season: SeasonVie
                     <span className="num">Ceiling (P90) {teamRange.p90.toFixed(0)}</span>
                   </div>
                   <RangeBar p10={teamRange.p10} p50={teamRange.p50} p90={teamRange.p90} mean={best.score} min={Math.min(teamRange.p10, 0)} max={teamRange.p90 * 1.05} />
-                  <p className="mt-1 text-xs text-ink-3">Range sums each asset's percentile; real outcomes correlate, so treat it as a guide, not a bound.</p>
+                  <p className="mt-1 text-xs text-ink-3">Team range from the joint simulation: boosts, the transfer penalty, and the way one race moves every asset together are all in it.</p>
                 </div>
               )}
 
@@ -149,6 +149,26 @@ export function DecideView({ season, round, state, update }: { season: SeasonVie
           )}
           {!best && !loading && !error && <p className="text-sm text-ink-3">No legal team fits the budget.</p>}
         </Card>
+
+        {result && result.chips?.length > 0 && (
+          <Card title="Chips this round" right={<span className="text-xs text-ink-3">expected gain if played on the recommended team</span>}>
+            <ul className="space-y-2">
+              {result.chips.map((c) => (
+                <li key={c.chip} className={`flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm ${c.available ? "" : "opacity-60"}`}>
+                  <span className="w-24 shrink-0 font-medium text-ink">{c.label}</span>
+                  <span className="num w-14 shrink-0 text-right">{c.available ? <Delta value={c.gain} digits={0} /> : <span className="text-ink-3">—</span>}</span>
+                  <span className="min-w-0 flex-1 text-xs text-ink-3">
+                    {c.chip === "finalfix" && c.in_id ? `${byId.get(c.out_id ?? "")?.name} → ${byId.get(c.in_id)?.name}. ` : ""}
+                    {c.note}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-ink-3">
+              A chip's value on one round is only half the decision: each chip plays once a season, so compare with what it would be worth on a sprint weekend or a chaotic circuit before spending it.
+            </p>
+          </Card>
+        )}
 
         {result && result.teams.length > 1 && (
           <Card title="Alternatives">
@@ -216,17 +236,3 @@ function TeamLine({ team, byId, projById, chip }: { team: TeamView; byId: Map<st
   );
 }
 
-function rangeOf(team: TeamView, proj: Map<string, { p10: number; p50: number; p90: number; mean: number }>) {
-  let p10 = 0,
-    p50 = 0,
-    p90 = 0;
-  for (const a of [...team.drivers, ...team.constructors]) {
-    const p = proj.get(a.id);
-    if (!p) continue;
-    const mult = a.id === team.captain_id ? (team.boost_id ? 3 : 2) : a.id === team.boost_id ? 2 : 1;
-    p10 += p.p10 * mult;
-    p50 += p.p50 * mult;
-    p90 += p.p90 * mult;
-  }
-  return { p10: p10 + team.penalty, p50: p50 + team.penalty, p90: p90 + team.penalty };
-}

@@ -94,8 +94,10 @@ export function TeamBuilder({ season, state, update }: { season: SeasonView; sta
             { value: "wildcard", label: "Wildcard" },
             { value: "limitless", label: "Limitless" },
             { value: "3x", label: "x3 Boost" },
+            { value: "nonegative", label: "No Negative" },
           ]}
         />
+        <span className="text-[11px] text-ink-3">Autopilot and Final Fix are valued in "Chips this round".</span>
       </div>
       <div className="flex flex-wrap items-center gap-3 text-xs text-ink-3">
         <span>Optimize for</span>

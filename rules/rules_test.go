@@ -115,6 +115,38 @@ func TestDriverPoints(t *testing.T) {
 	})
 }
 
+func TestNoNegative(t *testing.T) {
+	cfg := Default()
+
+	Convey("Given the No Negative chip floors each category at zero", t, func() {
+		Convey("When a driver qualifies P3 and retires after two overtakes", func() {
+			b := cfg.DriverBreakdown(DriverWeekend{QualiPos: 3, GridPos: 3, DNF: true, Overtakes: 2})
+			Convey("Then the normal score is 8 + 2 - 20 = -10 and the chip score keeps 8 + 2 = 10", func() {
+				So(b.Total(), ShouldEqual, -10)
+				So(b.NoNegative(), ShouldEqual, 10)
+			})
+		})
+
+		Convey("When a driver drops from P2 to P8 with the fastest lap", func() {
+			b := cfg.DriverBreakdown(DriverWeekend{QualiPos: 2, GridPos: 2, FinishPos: 8, FastestLap: true})
+			Convey("Then only the positions-lost category is floored: 9 + 4 + 10 = 23 instead of 17", func() {
+				So(b.Total(), ShouldEqual, 9+4-6+10)
+				So(b.NoNegative(), ShouldEqual, 9+4+10)
+			})
+		})
+
+		Convey("When a constructor's drivers both fall out in Q1 and one retires", func() {
+			a := DriverWeekend{QualiPos: 18, GridPos: 18, DNF: true}
+			b := DriverWeekend{QualiPos: 20, GridPos: 20, FinishPos: 16}
+			total, nn := cfg.ConstructorPointsBoth(a, b, 5)
+			Convey("Then the normal score takes -20 and -1, and the chip score floors both", func() {
+				So(total, ShouldEqual, -20+4-1+5)
+				So(nn, ShouldEqual, 4+5)
+			})
+		})
+	})
+}
+
 func TestConstructorPoints(t *testing.T) {
 	cfg := Default()
 

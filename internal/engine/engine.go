@@ -441,6 +441,94 @@ type TeamView struct {
 	Score        float64     `json:"score"`
 	In           []string    `json:"in"`  // asset IDs bought
 	Out          []string    `json:"out"` // asset IDs sold
+	// P10, P50, and P90 are the team's score percentiles from the joint
+	// simulation, boosts and penalty included.
+	P10 float64 `json:"p10"`
+	P50 float64 `json:"p50"`
+	P90 float64 `json:"p90"`
+}
+
+// ChipValue is the expected gain of playing one chip this round on the
+// recommended team.
+type ChipValue struct {
+	Chip      string  `json:"chip"`
+	Label     string  `json:"label"`
+	Gain      float64 `json:"gain"`
+	Available bool    `json:"available"`
+	Note      string  `json:"note"`
+	// Final Fix: the swap that gives the gain.
+	OutID string `json:"out_id,omitempty"`
+	InID  string `json:"in_id,omitempty"`
+}
+
+// teamSamples sums the joint samples of a team, with the boosts and the
+// transfer penalty, under normal or No Negative scoring.
+func teamSamples(sim model.SimResult, t optimize.Team, noNegative bool) []float64 {
+	src := sim.Samples
+	if noNegative {
+		src = sim.SamplesNN
+	}
+	n := sim.Sims
+	out := make([]float64, n)
+	add := func(id string, mult float64) {
+		s := src[id]
+		if len(s) != n {
+			return
+		}
+		for i := range out {
+			out[i] += mult * s[i]
+		}
+	}
+	for _, d := range t.Drivers {
+		mult := 1.0
+		if d.ID == t.CaptainID {
+			if t.BoostID != "" {
+				mult = 3
+			} else {
+				mult = 2
+			}
+		} else if d.ID == t.BoostID {
+			mult = 2
+		}
+		add(d.ID, mult)
+	}
+	for _, c := range t.Constructors {
+		add(c.ID, 1)
+	}
+	for i := range out {
+		out[i] += t.Penalty
+	}
+	return out
+}
+
+// autopilotGain is the expected gain of assigning the Boost after the race
+// to the team's best driver, over the pre-chosen captain.
+func autopilotGain(sim model.SimResult, t optimize.Team) float64 {
+	n := sim.Sims
+	if n == 0 {
+		return 0
+	}
+	var gain float64
+	for i := 0; i < n; i++ {
+		best := math.Inf(-1)
+		chosen := 0.0
+		for _, d := range t.Drivers {
+			s := sim.Samples[d.ID]
+			if len(s) != n {
+				continue
+			}
+			if s[i] > best {
+				best = s[i]
+			}
+			if d.ID == t.CaptainID {
+				chosen = s[i]
+			}
+		}
+		if best > math.Inf(-1) {
+			gain += best - chosen
+		}
+	}
+	return gain / float64(n)
 }
 
 // TeamAsset is one asset inside a team.
@@ -462,6 +550,8 @@ type OptimizeView struct {
 	Teams        []TeamView     `json:"teams"`
 	CurrentScore float64        `json:"current_score"` // projected score of the team as-is
 	Projection   ProjectionView `json:"projection"`
+	// Chips values every chip against the best team without a chip.
+	Chips []ChipValue `json:"chips"`
 }
 
 func teamView(t optimize.Team, current map[string]bool) TeamView {
@@ -522,23 +612,32 @@ func (e *Engine) Optimize(in OptimizeInput) (OptimizeView, error) {
 			return p.Mean
 		}
 	}
-	var assets []optimize.Asset
-	points := map[string]float64{}
-	for _, a := range e.data.Assets {
-		if !e.data.Selectable(a) {
-			continue
+	// assetsFor builds the optimizer's asset list from the projection,
+	// under normal or No Negative scoring.
+	assetsFor := func(noNegative bool) ([]optimize.Asset, map[string]float64) {
+		var assets []optimize.Asset
+		points := map[string]float64{}
+		for _, a := range e.data.Assets {
+			if !e.data.Selectable(a) {
+				continue
+			}
+			h, _ := a.Latest()
+			p, ok := sim.ByID(a.ID)
+			if !ok {
+				continue
+			}
+			v := pick(p)
+			if noNegative {
+				v = p.MeanNN
+			}
+			points[a.ID] = v
+			assets = append(assets, optimize.Asset{
+				ID: a.ID, Name: a.Name, Kind: string(a.Kind), Price: h.Price, Points: v,
+			})
 		}
-		h, _ := a.Latest()
-		p, ok := sim.ByID(a.ID)
-		if !ok {
-			continue
-		}
-		points[a.ID] = pick(p)
-		assets = append(assets, optimize.Asset{
-			ID: a.ID, Name: a.Name, Kind: string(a.Kind), Price: h.Price, Points: pick(p),
-		})
+		return assets, points
 	}
-	opt := optimize.Options{
+	baseOpt := optimize.Options{
 		Budget:           e.cfg.Budget,
 		DriverSlots:      e.cfg.TeamDrivers,
 		ConstructorSlots: e.cfg.TeamConstructors,
@@ -548,29 +647,52 @@ func (e *Engine) Optimize(in OptimizeInput) (OptimizeView, error) {
 		TopN:             in.Top,
 	}
 	if in.Budget > 0 {
-		opt.Budget = in.Budget
+		baseOpt.Budget = in.Budget
 	}
-	switch in.Chip {
-	case "wildcard":
-		opt.Wildcard = true
-	case "limitless":
-		opt.Limitless = true
-	case "3x":
-		opt.ExtraBoost = true
+	withChip := func(chip string) optimize.Options {
+		o := baseOpt
+		switch chip {
+		case "wildcard":
+			o.Wildcard = true
+		case "limitless":
+			o.Limitless = true
+		case "3x":
+			o.ExtraBoost = true
+		}
+		return o
 	}
-	teams := optimize.Best(assets, opt)
+	noNegative := in.Chip == "nonegative"
+	assets, points := assetsFor(noNegative)
+	teams := optimize.Best(assets, withChip(in.Chip))
 
 	current := map[string]bool{}
 	for _, id := range in.Team {
 		current[id] = true
 	}
 	view := OptimizeView{
-		Round: target.Round, Name: target.Name, Risk: in.Risk, Chip: in.Chip, Budget: opt.Budget,
+		Round: target.Round, Name: target.Name, Risk: in.Risk, Chip: in.Chip, Budget: baseOpt.Budget,
 		Projection: e.projectionView(target, sim, cond),
 	}
 	view.Projection.QualiFromData, view.Projection.GridFromData, view.Projection.SprintFromData = k.quali, k.grid, k.sprint
 	for _, t := range teams {
-		view.Teams = append(view.Teams, teamView(t, current))
+		tv := teamView(t, current)
+		if s := teamSamples(sim, t, noNegative); len(s) > 0 {
+			p := model.Summarize(s)
+			tv.P10, tv.P50, tv.P90 = p.P10, p.P50, p.P90
+		}
+		view.Teams = append(view.Teams, tv)
+	}
+
+	// Value every chip against the best team without a chip.
+	plainAssets, _ := assetsFor(false)
+	var base optimize.Team
+	if in.Chip == "" && len(teams) > 0 {
+		base = teams[0]
+	} else if bt := optimize.Best(plainAssets, withChip("")); len(bt) > 0 {
+		base = bt[0]
+	}
+	if len(base.Drivers) > 0 {
+		view.Chips = e.chipValues(target, sim, cond, base, plainAssets, withChip, assetsFor, baseOpt)
 	}
 
 	// Score the current team as-is, with the Boost on its best driver.
@@ -589,6 +711,134 @@ func (e *Engine) Optimize(in OptimizeInput) (OptimizeView, error) {
 		}
 	}
 	return view, nil
+}
+
+// chipValues computes the expected gain of each chip against the base
+// team. The caller holds the read lock.
+func (e *Engine) chipValues(target dataset.Round, sim model.SimResult, cond Conditions, base optimize.Team,
+	plainAssets []optimize.Asset, withChip func(string) optimize.Options,
+	assetsFor func(bool) ([]optimize.Asset, map[string]float64), baseOpt optimize.Options) []ChipValue {
+
+	baseScore := base.Score
+	var out []ChipValue
+
+	// No Negative: the same team scored with every negative category
+	// floored at zero.
+	nnSamples := teamSamples(sim, base, true)
+	plainSamples := teamSamples(sim, base, false)
+	out = append(out, ChipValue{
+		Chip: "nonegative", Label: "No Negative", Available: true,
+		Gain: mean(nnSamples) - mean(plainSamples),
+		Note: "Floors every negative scoring category at zero for each asset on the team.",
+	})
+
+	// x3 Boost: the best team with a tripled driver and the Boost on
+	// another.
+	if bt := optimize.Best(plainAssets, withChip("3x")); len(bt) > 0 {
+		out = append(out, ChipValue{
+			Chip: "3x", Label: "x3 Boost", Available: true, Gain: bt[0].Score - baseScore,
+			Note: "Triples one driver; the regular Boost moves to another.",
+		})
+	}
+
+	// Autopilot: the Boost lands on the best actual scorer.
+	out = append(out, ChipValue{
+		Chip: "autopilot", Label: "Autopilot", Available: true, Gain: autopilotGain(sim, base),
+		Note: "The Boost moves to your top scorer after the race.",
+	})
+
+	// Wildcard and Limitless: what unlimited transfers or no cost cap add.
+	hasTeam := len(baseOpt.CurrentTeam) > 0
+	if bt := optimize.Best(plainAssets, withChip("wildcard")); len(bt) > 0 {
+		cv := ChipValue{Chip: "wildcard", Label: "Wildcard", Available: hasTeam, Gain: bt[0].Score - baseScore,
+			Note: "Unlimited transfers within the cost cap."}
+		if !hasTeam {
+			cv.Note = "Enter your current team to value unlimited transfers."
+			cv.Gain = 0
+		}
+		out = append(out, cv)
+	}
+	if bt := optimize.Best(plainAssets, withChip("limitless")); len(bt) > 0 {
+		out = append(out, ChipValue{
+			Chip: "limitless", Label: "Limitless", Available: true, Gain: bt[0].Score - baseScore,
+			Note: "No cost cap and unlimited transfers for one round; the team restores after.",
+		})
+	}
+
+	// Final Fix: one driver swap after qualifying. The incoming driver
+	// scores the race only; the outgoing driver keeps the qualifying
+	// points. Only valued once the qualifying result is known.
+	ff := ChipValue{Chip: "finalfix", Label: "Final Fix", Note: "Available after qualifying: swap one driver before the race."}
+	if len(cond.Quali) > 0 && !target.HasResults {
+		qualiPts := func(id string) float64 {
+			for _, a := range e.data.Assets {
+				if a.ID == id {
+					for i, tla := range cond.Quali {
+						if strings.EqualFold(tla, a.TLA) {
+							if i < len(e.cfg.QualiPoints) {
+								return float64(e.cfg.QualiPoints[i])
+							}
+							return 0
+						}
+					}
+					return float64(e.cfg.QualiNoTime)
+				}
+			}
+			return 0
+		}
+		raceLeg := func(id string) float64 {
+			p, _ := sim.ByID(id)
+			return p.Mean - qualiPts(id)
+		}
+		held := map[string]bool{}
+		var cost float64
+		for _, d := range base.Drivers {
+			held[d.ID] = true
+			cost += d.Price
+		}
+		for _, c := range base.Constructors {
+			cost += c.Price
+		}
+		spare := baseOpt.Budget - cost
+		bestGain := 0.0
+		for _, outD := range base.Drivers {
+			mult := 1.0
+			if outD.ID == base.CaptainID {
+				mult = 2
+			}
+			for _, inA := range plainAssets {
+				if inA.Kind != "driver" || held[inA.ID] || inA.Price > outD.Price+spare+1e-9 {
+					continue
+				}
+				gain := (raceLeg(inA.ID) - raceLeg(outD.ID)) * mult
+				if gain > bestGain {
+					bestGain, ff.OutID, ff.InID = gain, outD.ID, inA.ID
+				}
+			}
+		}
+		ff.Available = true
+		ff.Gain = bestGain
+		if ff.InID == "" {
+			ff.Note = "No swap improves the race-only projection. Keep the chip."
+		} else {
+			ff.Note = "The incoming driver scores the race only; the outgoing driver keeps qualifying points."
+		}
+	}
+	out = append(out, ff)
+
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Gain > out[j].Gain })
+	return out
+}
+
+func mean(v []float64) float64 {
+	if len(v) == 0 {
+		return 0
+	}
+	s := 0.0
+	for _, x := range v {
+		s += x
+	}
+	return s / float64(len(v))
 }
 
 // --- review -----------------------------------------------------------------

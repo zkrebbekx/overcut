@@ -19,6 +19,9 @@ type Projection struct {
 	P10  float64
 	P50  float64
 	P90  float64
+	// MeanNN is the mean under the No Negative chip, which floors every
+	// negative scoring category at zero.
+	MeanNN float64
 }
 
 // SimResult holds the projections of one simulated round.
@@ -28,6 +31,12 @@ type SimResult struct {
 	Sims      int
 	Assets    []Projection
 	projByID  map[string]*Projection
+
+	// Samples holds every simulated score per asset ID, in simulation
+	// order, so a caller can combine assets with their real joint
+	// distribution. SamplesNN holds the same under the No Negative chip.
+	Samples   map[string][]float64
+	SamplesNN map[string][]float64
 }
 
 // ByID returns the projection for one asset ID.
@@ -134,11 +143,14 @@ func (m Model) SimulateWith(round int, hasSprint bool, sims int, seed uint64, co
 		return grid
 	}
 	samples := map[string][]float64{}
+	samplesNN := map[string][]float64{}
 	for _, dm := range m.Drivers {
 		samples[dm.AssetID] = make([]float64, 0, sims)
+		samplesNN[dm.AssetID] = make([]float64, 0, sims)
 	}
 	for _, cm := range m.Constructors {
 		samples[cm.AssetID] = make([]float64, 0, sims)
+		samplesNN[cm.AssetID] = make([]float64, 0, sims)
 	}
 
 	type slot struct {
@@ -255,7 +267,9 @@ func (m Model) SimulateWith(round int, hasSprint bool, sims int, seed uint64, co
 				w.SprintDNF = sprintDNF[i]
 			}
 			weekends[i] = w
-			samples[dm.AssetID] = append(samples[dm.AssetID], float64(m.Rules.DriverPoints(w)))
+			bd := m.Rules.DriverBreakdown(w)
+			samples[dm.AssetID] = append(samples[dm.AssetID], float64(bd.Total()))
+			samplesNN[dm.AssetID] = append(samplesNN[dm.AssetID], float64(bd.NoNegative()))
 		}
 
 		for _, cm := range m.Constructors {
@@ -268,18 +282,21 @@ func (m Model) SimulateWith(round int, hasSprint bool, sims int, seed uint64, co
 			if len(ws) != 2 {
 				continue
 			}
-			pts := float64(m.Rules.ConstructorPoints(ws[0], ws[1], 0)) + cm.PitResid
-			samples[cm.AssetID] = append(samples[cm.AssetID], pts)
+			total, nn := m.Rules.ConstructorPointsBoth(ws[0], ws[1], 0)
+			samples[cm.AssetID] = append(samples[cm.AssetID], float64(total)+cm.PitResid)
+			samplesNN[cm.AssetID] = append(samplesNN[cm.AssetID], float64(nn)+math.Max(cm.PitResid, 0))
 		}
 	}
 
-	res := SimResult{Round: round, HasSprint: hasSprint, Sims: sims, projByID: map[string]*Projection{}}
+	res := SimResult{Round: round, HasSprint: hasSprint, Sims: sims, projByID: map[string]*Projection{},
+		Samples: samples, SamplesNN: samplesNN}
 	add := func(id, name, kind string) {
 		sample := samples[id]
 		if len(sample) == 0 {
 			return
 		}
 		p := summarize(sample)
+		p.MeanNN = mean(samplesNN[id])
 		p.AssetID, p.Name, p.Kind = id, name, kind
 		res.Assets = append(res.Assets, p)
 		res.projByID[id] = &res.Assets[len(res.Assets)-1]
@@ -296,6 +313,22 @@ func (m Model) SimulateWith(round int, hasSprint bool, sims int, seed uint64, co
 		res.projByID[res.Assets[i].AssetID] = &res.Assets[i]
 	}
 	return res
+}
+
+func mean(sample []float64) float64 {
+	if len(sample) == 0 {
+		return 0
+	}
+	var sum float64
+	for _, v := range sample {
+		sum += v
+	}
+	return sum / float64(len(sample))
+}
+
+// Summarize computes the moments and percentiles of a sample.
+func Summarize(sample []float64) Projection {
+	return summarize(sample)
 }
 
 // summarize computes the moments and percentiles of a sample.

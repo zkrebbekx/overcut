@@ -18,6 +18,13 @@ should I do this round, and how confident should I be?**
 - **Project.** A Monte Carlo model simulates the weekend many thousand
   times and gives every asset a full points distribution: mean, P10, P50,
   and P90. Optimize for the expected value, the safe floor, or the ceiling.
+  A team's own range comes from the joint simulation, so it reflects the
+  way one race moves every asset together.
+- **Chips.** Every chip is valued against the recommended team each round:
+  No Negative (each negative category floored at zero), x3 Boost, Autopilot
+  (the Boost landing on the actual top scorer), Wildcard, Limitless, and
+  Final Fix (the best race-only swap once qualifying is known). The
+  optimizer can plan a team for Wildcard, Limitless, x3, or No Negative.
 - **Know the weekend.** The model uses everything that is official: the
   qualifying classification, the starting grid with every penalty applied
   (read from the official results pages a few hours after qualifying), and

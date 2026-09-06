@@ -316,7 +316,7 @@ func cmdOptimize(args []string) error {
 	seed := fs.Uint64("seed", 1, "random seed")
 	team := fs.String("team", "", "current team (TLAs and constructor names)")
 	free := fs.Int("free", 2, "free transfers")
-	chip := fs.String("chip", "", "wildcard | limitless | 3x")
+	chip := fs.String("chip", "", "wildcard | limitless | 3x | nonegative")
 	budget := fs.Float64("budget", 0, "budget in millions (default from rules)")
 	risk := fs.String("risk", "mean", "mean | p10 | p90")
 	top := fs.Int("top", 5, "teams to show")
@@ -389,6 +389,12 @@ func cmdOptimize(args []string) error {
 		opt.Limitless = true
 	case "3x":
 		opt.ExtraBoost = true
+	case "nonegative":
+		for i := range assets {
+			if p, ok := sim.ByID(assets[i].ID); ok {
+				assets[i].Points = p.MeanNN
+			}
+		}
 	case "":
 	default:
 		return fmt.Errorf("unknown chip %q", *chip)

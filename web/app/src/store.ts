@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Conditions } from "./api";
 
 export type Risk = "mean" | "p10" | "p90";
-export type Chip = "" | "wildcard" | "limitless" | "3x";
+export type Chip = "" | "wildcard" | "limitless" | "3x" | "nonegative";
 
 export interface PlayerState {
   team: string[]; // asset IDs
