@@ -12,6 +12,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/zkrebbekx/overcut/internal/f1site"
 	"github.com/zkrebbekx/overcut/internal/feed"
 	"github.com/zkrebbekx/overcut/internal/jolpica"
 )
@@ -48,6 +49,10 @@ type Round struct {
 
 	// Quali maps a driver TLA to the final qualifying position.
 	Quali map[string]int `json:"quali,omitempty"`
+	// Grid maps a driver TLA to the official starting position with
+	// penalties applied. It is set from the official grid page once that
+	// is published, before the race.
+	Grid map[string]int `json:"grid,omitempty"`
 	// Race maps a driver TLA to the race row.
 	Race map[string]RaceRow `json:"race,omitempty"`
 	// Sprint maps a driver TLA to the sprint row.
@@ -108,6 +113,60 @@ func (a Asset) RoundHistory(gameday int) (AssetRound, bool) {
 	return AssetRound{}, false
 }
 
+// fetchGrids fills Round.Grid from the official grid page for every round
+// that has qualified but not raced. Errors are reported on stderr and
+// otherwise ignored.
+func fetchGrids(season int, rounds map[int]*Round) {
+	var pending []*Round
+	for _, rd := range rounds {
+		if len(rd.Quali) > 0 && !rd.HasResults {
+			pending = append(pending, rd)
+		}
+	}
+	if len(pending) == 0 {
+		return
+	}
+	index, err := f1site.Index(nil, season)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "warning:", err)
+		return
+	}
+	for _, rd := range pending {
+		race, ok := f1site.MatchRace(index, rd.Name)
+		if !ok {
+			fmt.Fprintf(os.Stderr, "warning: no official results entry for %q\n", rd.Name)
+			continue
+		}
+		rows, err := f1site.StartingGrid(nil, season, race)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "warning:", err)
+			continue
+		}
+		grid := map[string]int{}
+		for _, row := range rows {
+			grid[row.Code] = row.Position
+		}
+		// Accept the grid only when it covers the qualified field.
+		if len(grid) >= len(rd.Quali) {
+			rd.Grid = grid
+		}
+	}
+}
+
+// GridOrder returns the official starting grid as TLAs from P1, or nil
+// when the round has no published grid.
+func (r Round) GridOrder() []string {
+	if len(r.Grid) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(r.Grid))
+	for tla := range r.Grid {
+		out = append(out, tla)
+	}
+	sort.Slice(out, func(i, j int) bool { return r.Grid[out[i]] < r.Grid[out[j]] })
+	return out
+}
+
 // sessionTime parses a calendar date and UTC time. A missing time is not
 // a session start.
 func sessionTime(date, clock string) (time.Time, bool) {
@@ -142,13 +201,20 @@ const DueWindow = 6 * time.Hour
 const MaxAge = 24 * time.Hour
 
 // Due reports whether a sync should run now, and why. A sync is due when
-// a session ended within DueWindow, or the dataset is older than MaxAge.
+// a session ended within DueWindow, when a round has qualified but its
+// official grid is not in the data yet and the race has not started, or
+// when the dataset is older than MaxAge.
 func (d Data) Due(now time.Time) (string, bool) {
 	for _, r := range d.Rounds {
 		for name, start := range r.Sessions {
 			end := start.Add(sessionLength[name])
 			if !now.Before(end) && now.Before(end.Add(DueWindow)) {
 				return fmt.Sprintf("round %d %s ended %s ago", r.Round, name, now.Sub(end).Round(time.Minute)), true
+			}
+		}
+		if len(r.Quali) > 0 && len(r.Grid) == 0 && !r.HasResults {
+			if race, ok := r.Sessions["Race"]; !ok || now.Before(race) {
+				return fmt.Sprintf("round %d has qualified and the official grid is not in yet", r.Round), true
 			}
 		}
 	}
@@ -284,6 +350,10 @@ func Sync(season int) (Data, error) {
 			rd.Race[res.Driver.Code] = row
 		}
 	}
+	// The official starting grid, for rounds between qualifying and the
+	// race. A failure here is not fatal: the grid is an enrichment.
+	fetchGrids(season, rounds)
+
 	for i := 1; i <= len(rounds); i++ {
 		if rd, ok := rounds[i]; ok {
 			d.Rounds = append(d.Rounds, *rd)

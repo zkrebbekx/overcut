@@ -82,7 +82,10 @@ type RoundView struct {
 	HasResults bool   `json:"has_results"`
 	// HasQuali reports that the official qualifying classification is in
 	// the data; projections use it unless the caller supplies an order.
-	HasQuali bool                 `json:"has_quali"`
+	HasQuali bool `json:"has_quali"`
+	// HasGrid reports that the official starting grid, with penalties, is
+	// in the data; projections use it unless the caller supplies one.
+	HasGrid  bool                 `json:"has_grid"`
 	Sessions map[string]time.Time `json:"sessions,omitempty"`
 }
 
@@ -135,7 +138,7 @@ func (e *Engine) Season() SeasonView {
 		v.Rounds = append(v.Rounds, RoundView{
 			Round: r.Round, Name: r.Name, CircuitID: r.CircuitID, Date: r.Date,
 			HasSprint: r.HasSprint, HasResults: r.HasResults,
-			HasQuali: len(r.Quali) > 0, Sessions: r.Sessions,
+			HasQuali: len(r.Quali) > 0, HasGrid: len(r.Grid) > 0, Sessions: r.Sessions,
 		})
 	}
 	for _, a := range d.Assets {
@@ -216,24 +219,33 @@ type ProjectionView struct {
 	// Conditions is the state the simulation used, including any
 	// qualifying order filled in from the official data.
 	Conditions Conditions `json:"conditions"`
-	// QualiFromData reports that the qualifying order came from the
-	// official classification rather than the caller.
+	// QualiFromData and GridFromData report that the qualifying order or
+	// the starting grid came from the official data rather than the caller.
 	QualiFromData bool              `json:"quali_from_data"`
+	GridFromData  bool              `json:"grid_from_data"`
 	Assets        []AssetProjection `json:"assets"`
 }
 
-// withKnownQuali fills an empty qualifying order from the official
-// classification when the round has qualified but not raced.
-func withKnownQuali(target dataset.Round, cond Conditions) (Conditions, bool) {
-	if len(cond.Quali) > 0 || target.HasResults {
-		return cond, false
+// withKnownWeekend fills an empty qualifying order and an empty grid from
+// the official data when the round has qualified but not raced. The grid
+// carries every penalty, so it takes precedence over back-of-grid hints.
+func withKnownWeekend(target dataset.Round, cond Conditions) (c Conditions, quali, grid bool) {
+	if target.HasResults {
+		return cond, false, false
 	}
-	order := target.QualiOrder()
-	if order == nil {
-		return cond, false
+	if len(cond.Quali) == 0 {
+		if order := target.QualiOrder(); order != nil {
+			cond.Quali = order
+			quali = true
+		}
 	}
-	cond.Quali = order
-	return cond, true
+	if len(cond.Grid) == 0 {
+		if order := target.GridOrder(); order != nil {
+			cond.Grid = order
+			grid = true
+		}
+	}
+	return cond, quali, grid
 }
 
 // AssetProjection is one asset's projected distribution plus market data.
@@ -335,10 +347,10 @@ func (e *Engine) Project(in ProjectInput) (ProjectionView, error) {
 	if err != nil {
 		return ProjectionView{}, err
 	}
-	cond, fromData := withKnownQuali(target, in.Conditions)
+	cond, qualiFromData, gridFromData := withKnownWeekend(target, in.Conditions)
 	sim := e.simulate(target, in.Sims, in.Seed, cond)
 	view := e.projectionView(target, sim, cond)
-	view.QualiFromData = fromData
+	view.QualiFromData, view.GridFromData = qualiFromData, gridFromData
 	return view, nil
 }
 
@@ -440,7 +452,7 @@ func (e *Engine) Optimize(in OptimizeInput) (OptimizeView, error) {
 	if in.Risk == "" {
 		in.Risk = "mean"
 	}
-	cond, fromData := withKnownQuali(target, in.Conditions)
+	cond, qualiFromData, gridFromData := withKnownWeekend(target, in.Conditions)
 	in.Conditions = cond
 	sim := e.simulate(target, in.Sims, in.Seed, cond)
 	pick := func(p model.Projection) float64 {
@@ -499,7 +511,7 @@ func (e *Engine) Optimize(in OptimizeInput) (OptimizeView, error) {
 		Round: target.Round, Name: target.Name, Risk: in.Risk, Chip: in.Chip, Budget: opt.Budget,
 		Projection: e.projectionView(target, sim, cond),
 	}
-	view.Projection.QualiFromData = fromData
+	view.Projection.QualiFromData, view.Projection.GridFromData = qualiFromData, gridFromData
 	for _, t := range teams {
 		view.Teams = append(view.Teams, teamView(t, current))
 	}

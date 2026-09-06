@@ -10,6 +10,7 @@ export interface RoundView {
   has_sprint: boolean;
   has_results: boolean;
   has_quali: boolean;
+  has_grid: boolean;
   sessions?: Record<string, string>;
 }
 
@@ -79,6 +80,7 @@ export interface ProjectionView {
   sims: number;
   conditions: Conditions;
   quali_from_data: boolean;
+  grid_from_data: boolean;
   assets: AssetProjection[];
 }
 
