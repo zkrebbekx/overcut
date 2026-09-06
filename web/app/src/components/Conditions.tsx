@@ -11,7 +11,7 @@ function parse(s: string): string[] {
     .filter(Boolean);
 }
 
-export function ConditionsPanel({ season, value, onChange }: { season: SeasonView; value: Conditions; onChange: (c: Conditions) => void }) {
+export function ConditionsPanel({ season, value, onChange, officialQuali }: { season: SeasonView; value: Conditions; onChange: (c: Conditions) => void; officialQuali?: boolean }) {
   const known = new Set(season.assets.filter((a) => a.kind === "driver" && a.selectable).map((a) => a.tla));
   const field = (key: keyof Conditions, label: string, hint: string) => {
     const text = (value[key] ?? []).join(", ");
@@ -36,7 +36,10 @@ export function ConditionsPanel({ season, value, onChange }: { season: SeasonVie
       <p className="text-xs leading-relaxed text-ink-3">
         Enter driver codes from P1, comma-separated. Leave blank for anything not yet known; the model samples it from form.
       </p>
-      {field("quali", "Qualifying order", "RUS, HAM, VER, …")}
+      {officialQuali && !(value.quali?.length ?? 0) && (
+        <p className="rounded-[6px] border border-gain/30 bg-gain/10 px-2 py-1.5 text-xs text-gain">Official qualifying result loaded from the data. Enter an order below only to override it.</p>
+      )}
+      {field("quali", "Qualifying order", officialQuali ? "official result in use" : "RUS, HAM, VER, …")}
       {field("grid", "Starting grid (after penalties)", "leave blank to derive from qualifying")}
       {field("back", "Back of grid", "ANT, ALB")}
       {field("fp3", "FP3 order (pace prior)", "RUS, HAM, VER, …")}

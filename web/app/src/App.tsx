@@ -61,7 +61,7 @@ export default function App() {
     return season.rounds.find((r) => r.round === n) ?? null;
   }, [season, state.round]);
 
-  const knows = describeKnowledge(state.conditions);
+  const knows = describeKnowledge(state.conditions, !!round?.has_quali && !round?.has_results);
 
   async function sync() {
     if (!api.sync) return;
@@ -203,14 +203,15 @@ function teamFromURL(season: SeasonView): Partial<PlayerState> | null {
   return patch;
 }
 
-function describeKnowledge(c: { quali?: string[]; grid?: string[]; back?: string[]; fp3?: string[] }) {
+function describeKnowledge(c: { quali?: string[]; grid?: string[]; back?: string[]; fp3?: string[] }, officialQuali: boolean) {
   const parts: string[] = [];
   if (c.grid?.length) parts.push("grid");
   else if (c.quali?.length) parts.push("qualifying");
+  else if (officialQuali) parts.push("official qualifying");
   if (c.back?.length) parts.push("penalties");
   if (c.fp3?.length) parts.push("FP3");
   if (parts.length === 0) {
     return { label: "Before qualifying", tone: "warn", detail: "Projections sample the grid from form." };
   }
-  return { label: `Model knows: ${parts.join(", ")}`, tone: "ok", detail: "Projections use the entered weekend state." };
+  return { label: `Model knows: ${parts.join(", ")}`, tone: "ok", detail: "Projections use the known weekend state." };
 }

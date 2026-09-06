@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"net/http"
 
@@ -28,7 +29,7 @@ import (
 const usage = `overcut — F1 Fantasy analysis toolkit
 
 Usage:
-  overcut sync       [-season 2026]                 download season data
+  overcut sync       [-season 2026] [-when-due]     download season data
   overcut project    [-sims 20000] [-round N]       project the next round
   overcut optimize   [-team VER,NOR,...] [options]  find the best team
   overcut prices                                    predict price changes
@@ -124,7 +125,23 @@ func (c *common) loadData() (dataset.Data, error) {
 func cmdSync(args []string) error {
 	fs := flag.NewFlagSet("sync", flag.ExitOnError)
 	c := addCommon(fs)
+	whenDue := fs.Bool("when-due", false, "sync only when a session ended recently or the data is stale")
 	fs.Parse(args)
+
+	if *whenDue {
+		existing, err := dataset.Load(c.dataPath())
+		if err == nil {
+			reason, due := existing.Due(time.Now().UTC())
+			if !due {
+				fmt.Printf("skip: %s\n", reason)
+				if r, name, start, ok := existing.NextSession(time.Now().UTC()); ok {
+					fmt.Printf("next: round %d %s at %s\n", r, name, start.Format(time.RFC3339))
+				}
+				return nil
+			}
+			fmt.Printf("due: %s\n", reason)
+		}
+	}
 
 	fmt.Printf("syncing season %d…\n", c.season)
 	d, err := dataset.Sync(c.season)

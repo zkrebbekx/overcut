@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/zkrebbekx/overcut/internal/feed"
@@ -40,6 +41,10 @@ type Round struct {
 	Date       string `json:"date"`
 	HasSprint  bool   `json:"has_sprint"`
 	HasResults bool   `json:"has_results"`
+
+	// Sessions maps a session name (FP1, FP2, FP3, SprintQualifying,
+	// Sprint, Qualifying, Race) to its scheduled start in UTC.
+	Sessions map[string]time.Time `json:"sessions,omitempty"`
 
 	// Quali maps a driver TLA to the final qualifying position.
 	Quali map[string]int `json:"quali,omitempty"`
@@ -103,6 +108,82 @@ func (a Asset) RoundHistory(gameday int) (AssetRound, bool) {
 	return AssetRound{}, false
 }
 
+// sessionTime parses a calendar date and UTC time. A missing time is not
+// a session start.
+func sessionTime(date, clock string) (time.Time, bool) {
+	if date == "" || clock == "" {
+		return time.Time{}, false
+	}
+	t, err := time.Parse("2006-01-02 15:04:05Z", date+" "+clock)
+	if err != nil {
+		return time.Time{}, false
+	}
+	return t, true
+}
+
+// sessionLength is the planned duration per session, with slack for a
+// delay. Data providers publish a classification after the session ends.
+var sessionLength = map[string]time.Duration{
+	"FP1":              time.Hour,
+	"FP2":              time.Hour,
+	"FP3":              time.Hour,
+	"SprintQualifying": time.Hour,
+	"Sprint":           time.Hour,
+	"Qualifying":       time.Hour,
+	"Race":             3 * time.Hour,
+}
+
+// DueWindow is how long after a session ends a sync stays due. The
+// sources publish results and prices at different lags inside it.
+const DueWindow = 6 * time.Hour
+
+// MaxAge is the oldest a dataset may be before a sync is due regardless of
+// the calendar; ownership and prices move between weekends.
+const MaxAge = 24 * time.Hour
+
+// Due reports whether a sync should run now, and why. A sync is due when
+// a session ended within DueWindow, or the dataset is older than MaxAge.
+func (d Data) Due(now time.Time) (string, bool) {
+	for _, r := range d.Rounds {
+		for name, start := range r.Sessions {
+			end := start.Add(sessionLength[name])
+			if !now.Before(end) && now.Before(end.Add(DueWindow)) {
+				return fmt.Sprintf("round %d %s ended %s ago", r.Round, name, now.Sub(end).Round(time.Minute)), true
+			}
+		}
+	}
+	if now.Sub(d.SyncedAt) > MaxAge {
+		return fmt.Sprintf("dataset is %s old", now.Sub(d.SyncedAt).Round(time.Hour)), true
+	}
+	return "no session ended recently and the dataset is fresh", false
+}
+
+// NextSession returns the next scheduled session after now.
+func (d Data) NextSession(now time.Time) (round int, name string, start time.Time, ok bool) {
+	for _, r := range d.Rounds {
+		for n, s := range r.Sessions {
+			if s.After(now) && (!ok || s.Before(start)) {
+				round, name, start, ok = r.Round, n, s, true
+			}
+		}
+	}
+	return
+}
+
+// QualiOrder returns the qualifying classification as TLAs from P1, or
+// nil when the round has no qualifying result yet.
+func (r Round) QualiOrder() []string {
+	if len(r.Quali) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(r.Quali))
+	for tla := range r.Quali {
+		out = append(out, tla)
+	}
+	sort.Slice(out, func(i, j int) bool { return r.Quali[out[i]] < r.Quali[out[j]] })
+	return out
+}
+
 // classified reports whether a result row is a classified finish. A
 // classified car carries a numeric positionText; a retired, disqualified,
 // or withdrawn car carries a letter.
@@ -141,7 +222,23 @@ func Sync(season int) (Data, error) {
 			CircuitID: r.Circuit.CircuitID,
 			Date:      r.Date,
 			HasSprint: r.Sprint != nil,
+			Sessions:  map[string]time.Time{},
 		}
+		add := func(name string, e *jolpica.ScheduleEntry) {
+			if e == nil {
+				return
+			}
+			if t, ok := sessionTime(e.Date, e.Time); ok {
+				rd.Sessions[name] = t
+			}
+		}
+		add("FP1", r.FirstPractice)
+		add("FP2", r.SecondPractice)
+		add("FP3", r.ThirdPractice)
+		add("SprintQualifying", r.SprintQualifying)
+		add("Sprint", r.Sprint)
+		add("Qualifying", r.Qualifying)
+		add("Race", &jolpica.ScheduleEntry{Date: r.Date, Time: r.Time})
 		rounds[rd.Round] = rd
 	}
 	for _, r := range quali {

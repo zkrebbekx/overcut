@@ -80,6 +80,10 @@ type RoundView struct {
 	Date       string `json:"date"`
 	HasSprint  bool   `json:"has_sprint"`
 	HasResults bool   `json:"has_results"`
+	// HasQuali reports that the official qualifying classification is in
+	// the data; projections use it unless the caller supplies an order.
+	HasQuali bool                 `json:"has_quali"`
+	Sessions map[string]time.Time `json:"sessions,omitempty"`
 }
 
 // AssetView is one asset with its history.
@@ -131,6 +135,7 @@ func (e *Engine) Season() SeasonView {
 		v.Rounds = append(v.Rounds, RoundView{
 			Round: r.Round, Name: r.Name, CircuitID: r.CircuitID, Date: r.Date,
 			HasSprint: r.HasSprint, HasResults: r.HasResults,
+			HasQuali: len(r.Quali) > 0, Sessions: r.Sessions,
 		})
 	}
 	for _, a := range d.Assets {
@@ -204,12 +209,31 @@ type ProjectInput struct {
 
 // ProjectionView is one round's projection.
 type ProjectionView struct {
-	Round      int               `json:"round"`
-	Name       string            `json:"name"`
-	HasSprint  bool              `json:"has_sprint"`
-	Sims       int               `json:"sims"`
-	Conditions Conditions        `json:"conditions"`
-	Assets     []AssetProjection `json:"assets"`
+	Round     int    `json:"round"`
+	Name      string `json:"name"`
+	HasSprint bool   `json:"has_sprint"`
+	Sims      int    `json:"sims"`
+	// Conditions is the state the simulation used, including any
+	// qualifying order filled in from the official data.
+	Conditions Conditions `json:"conditions"`
+	// QualiFromData reports that the qualifying order came from the
+	// official classification rather than the caller.
+	QualiFromData bool              `json:"quali_from_data"`
+	Assets        []AssetProjection `json:"assets"`
+}
+
+// withKnownQuali fills an empty qualifying order from the official
+// classification when the round has qualified but not raced.
+func withKnownQuali(target dataset.Round, cond Conditions) (Conditions, bool) {
+	if len(cond.Quali) > 0 || target.HasResults {
+		return cond, false
+	}
+	order := target.QualiOrder()
+	if order == nil {
+		return cond, false
+	}
+	cond.Quali = order
+	return cond, true
 }
 
 // AssetProjection is one asset's projected distribution plus market data.
@@ -311,8 +335,11 @@ func (e *Engine) Project(in ProjectInput) (ProjectionView, error) {
 	if err != nil {
 		return ProjectionView{}, err
 	}
-	sim := e.simulate(target, in.Sims, in.Seed, in.Conditions)
-	return e.projectionView(target, sim, in.Conditions), nil
+	cond, fromData := withKnownQuali(target, in.Conditions)
+	sim := e.simulate(target, in.Sims, in.Seed, cond)
+	view := e.projectionView(target, sim, cond)
+	view.QualiFromData = fromData
+	return view, nil
 }
 
 // --- optimize ---------------------------------------------------------------
@@ -413,7 +440,9 @@ func (e *Engine) Optimize(in OptimizeInput) (OptimizeView, error) {
 	if in.Risk == "" {
 		in.Risk = "mean"
 	}
-	sim := e.simulate(target, in.Sims, in.Seed, in.Conditions)
+	cond, fromData := withKnownQuali(target, in.Conditions)
+	in.Conditions = cond
+	sim := e.simulate(target, in.Sims, in.Seed, cond)
 	pick := func(p model.Projection) float64 {
 		switch in.Risk {
 		case "p10":
@@ -468,8 +497,9 @@ func (e *Engine) Optimize(in OptimizeInput) (OptimizeView, error) {
 	}
 	view := OptimizeView{
 		Round: target.Round, Name: target.Name, Risk: in.Risk, Chip: in.Chip, Budget: opt.Budget,
-		Projection: e.projectionView(target, sim, in.Conditions),
+		Projection: e.projectionView(target, sim, cond),
 	}
+	view.Projection.QualiFromData = fromData
 	for _, t := range teams {
 		view.Teams = append(view.Teams, teamView(t, current))
 	}

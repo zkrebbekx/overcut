@@ -9,6 +9,8 @@ export interface RoundView {
   date: string;
   has_sprint: boolean;
   has_results: boolean;
+  has_quali: boolean;
+  sessions?: Record<string, string>;
 }
 
 export interface HistoryView {
@@ -76,6 +78,7 @@ export interface ProjectionView {
   has_sprint: boolean;
   sims: number;
   conditions: Conditions;
+  quali_from_data: boolean;
   assets: AssetProjection[];
 }
 

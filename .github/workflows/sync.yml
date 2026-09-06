@@ -1,15 +1,27 @@
 name: sync
 
-# Refresh the season data from the public sources and commit the change.
-# A commit on main triggers the pages workflow, so the site stays current.
+# Refresh the season data from the public sources when a session has just
+# ended, or when the data is a day old. The check runs every 20 minutes;
+# the sync itself only runs when `overcut sync -when-due` says it is due,
+# so most runs finish in seconds. A data commit on main triggers the pages
+# workflow, so the site follows the calendar.
 
 on:
   schedule:
-    - cron: "17 */6 * * *"
+    - cron: "*/20 * * * *"
   workflow_dispatch:
+    inputs:
+      force:
+        description: Sync even when not due
+        type: boolean
+        default: false
 
 permissions:
   contents: write
+
+concurrency:
+  group: sync
+  cancel-in-progress: false
 
 jobs:
   sync:
@@ -20,7 +32,12 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Sync
-        run: go run ./cmd/overcut sync -data data/season2026.json
+        run: |
+          if [ "${{ inputs.force }}" = "true" ]; then
+            go run ./cmd/overcut sync -data data/season2026.json
+          else
+            go run ./cmd/overcut sync -when-due -data data/season2026.json
+          fi
       - name: Commit if changed
         run: |
           # The synced_at stamp changes every run; only commit when the

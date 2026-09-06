@@ -20,18 +20,27 @@ type Race struct {
 	Round    string `json:"round"`
 	RaceName string `json:"raceName"`
 	Date     string `json:"date"`
+	Time     string `json:"time"`
 	Circuit  struct {
 		CircuitID string `json:"circuitId"`
 	} `json:"Circuit"`
-	Results          []Result       `json:"Results"`
-	QualifyingResult []QualiResult  `json:"QualifyingResults"`
-	SprintResults    []Result       `json:"SprintResults"`
+	Results          []Result      `json:"Results"`
+	QualifyingResult []QualiResult `json:"QualifyingResults"`
+	SprintResults    []Result      `json:"SprintResults"`
+
+	FirstPractice    *ScheduleEntry `json:"FirstPractice"`
+	SecondPractice   *ScheduleEntry `json:"SecondPractice"`
+	ThirdPractice    *ScheduleEntry `json:"ThirdPractice"`
+	Qualifying       *ScheduleEntry `json:"Qualifying"`
 	Sprint           *ScheduleEntry `json:"Sprint"`
+	SprintQualifying *ScheduleEntry `json:"SprintQualifying"`
 }
 
-// ScheduleEntry marks a session on the calendar.
+// ScheduleEntry marks a session on the calendar. Time is in UTC and may
+// be empty when the source has no time yet.
 type ScheduleEntry struct {
 	Date string `json:"date"`
+	Time string `json:"time"`
 }
 
 // Result is one classified row of a race or sprint.
