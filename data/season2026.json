@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "synced_at": "2026-09-12T15:43:48.971230854Z",
+ "synced_at": "2026-09-12T19:24:46.728220865Z",
  "rounds": [
   {
    "round": 1,
@@ -3356,7 +3356,7 @@
      "old_price": 10.6,
      "ownership": 20,
      "points": 2,
-     "quali_pts": 0,
+     "quali_pts": 2,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -4020,7 +4020,7 @@
      "old_price": 3,
      "ownership": 4,
      "points": -5,
-     "quali_pts": 0,
+     "quali_pts": -5,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -5680,7 +5680,7 @@
      "old_price": 24.2,
      "ownership": 27,
      "points": 6,
-     "quali_pts": 0,
+     "quali_pts": 6,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -6012,7 +6012,7 @@
      "old_price": 25.1,
      "ownership": 19,
      "points": 7,
-     "quali_pts": 0,
+     "quali_pts": 7,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -6344,7 +6344,7 @@
      "old_price": 7,
      "ownership": 50,
      "points": -5,
-     "quali_pts": 0,
+     "quali_pts": -5,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -7008,7 +7008,7 @@
      "old_price": 26.4,
      "ownership": 9,
      "points": 10,
-     "quali_pts": 0,
+     "quali_pts": 10,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -7340,7 +7340,7 @@
      "old_price": 24.1,
      "ownership": 9,
      "points": 4,
-     "quali_pts": 0,
+     "quali_pts": 4,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -7672,7 +7672,7 @@
      "old_price": 27.6,
      "ownership": 22,
      "points": 5,
-     "quali_pts": 0,
+     "quali_pts": 5,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -8004,7 +8004,7 @@
      "old_price": 26,
      "ownership": 38,
      "points": 9,
-     "quali_pts": 0,
+     "quali_pts": 9,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -8668,7 +8668,7 @@
      "old_price": 7.8,
      "ownership": 46,
      "points": 1,
-     "quali_pts": 0,
+     "quali_pts": 1,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -9000,7 +9000,7 @@
      "old_price": 27.5,
      "ownership": 17,
      "points": 8,
-     "quali_pts": 0,
+     "quali_pts": 8,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -10328,7 +10328,7 @@
      "old_price": 32.9,
      "ownership": 36,
      "points": 24,
-     "quali_pts": 0,
+     "quali_pts": 24,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -10660,7 +10660,7 @@
      "old_price": 31.3,
      "ownership": 10,
      "points": 24,
-     "quali_pts": 0,
+     "quali_pts": 24,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -10992,7 +10992,7 @@
      "old_price": 31.2,
      "ownership": 7,
      "points": 21,
-     "quali_pts": 0,
+     "quali_pts": 21,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -11324,7 +11324,7 @@
      "old_price": 26.9,
      "ownership": 42,
      "points": 23,
-     "quali_pts": 0,
+     "quali_pts": 23,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -11656,7 +11656,7 @@
      "old_price": 18.9,
      "ownership": 7,
      "points": 7,
-     "quali_pts": 0,
+     "quali_pts": 7,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -11988,7 +11988,7 @@
      "old_price": 13.2,
      "ownership": 9,
      "points": 1,
-     "quali_pts": 0,
+     "quali_pts": 1,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -12320,7 +12320,7 @@
      "old_price": 6.3,
      "ownership": 3,
      "points": -6,
-     "quali_pts": 0,
+     "quali_pts": -6,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -12652,7 +12652,7 @@
      "old_price": 11.4,
      "ownership": 24,
      "points": -4,
-     "quali_pts": 0,
+     "quali_pts": -4,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -12984,7 +12984,7 @@
      "old_price": 7.4,
      "ownership": 21,
      "points": 3,
-     "quali_pts": 0,
+     "quali_pts": 3,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -13316,7 +13316,7 @@
      "old_price": 13.5,
      "ownership": 33,
      "points": 6,
-     "quali_pts": 0,
+     "quali_pts": 6,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -13648,7 +13648,7 @@
      "old_price": 3,
      "ownership": 8,
      "points": -1,
-     "quali_pts": 0,
+     "quali_pts": -1,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
@@ -13806,7 +13806,7 @@
      "old_price": 14.3,
      "ownership": 2,
      "points": 3,
-     "quali_pts": 0,
+     "quali_pts": 3,
      "sprint_pts": 0,
      "race_pts": 0,
      "stats": {
