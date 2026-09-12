@@ -13,6 +13,7 @@ export interface RoundView {
   has_grid: boolean;
   has_sprint_result: boolean;
   sessions?: Record<string, string>;
+  provisional: boolean;
 }
 
 export interface HistoryView {
@@ -86,6 +87,7 @@ export interface ReviewView {
   assets: ReviewAsset[];
   coverage: number;
   driver_mae: number;
+  provisional: boolean;
   team_projected: number;
   team_actual: number;
   captain_id?: string;

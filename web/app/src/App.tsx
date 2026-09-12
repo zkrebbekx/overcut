@@ -63,7 +63,7 @@ export default function App() {
     return season.rounds.find((r) => r.round === n) ?? null;
   }, [season, state.round]);
 
-  const knows = describeKnowledge(state.conditions, !!round?.has_quali, !!round?.has_grid, !!round?.has_results, !!round?.has_sprint && !!round?.has_sprint_result);
+  const knows = describeKnowledge(state.conditions, !!round?.has_quali, !!round?.has_grid, !!round?.has_results, !!round?.has_sprint && !!round?.has_sprint_result, !!round?.provisional);
 
   async function sync() {
     if (!api.sync) return;
@@ -206,8 +206,11 @@ function teamFromURL(season: SeasonView): Partial<PlayerState> | null {
   return patch;
 }
 
-function describeKnowledge(c: { quali?: string[]; grid?: string[]; back?: string[]; fp3?: string[] }, officialQuali: boolean, officialGrid: boolean, complete: boolean, sprintResult: boolean) {
+function describeKnowledge(c: { quali?: string[]; grid?: string[]; back?: string[]; fp3?: string[] }, officialQuali: boolean, officialGrid: boolean, complete: boolean, sprintResult: boolean, provisional: boolean) {
   if (complete && !c.grid?.length && !c.quali?.length) {
+    if (provisional) {
+      return { label: "Round complete · provisional points", tone: "warn", detail: "The game publishes provisional points on race day and finalises them within about a day. The data refreshes automatically." };
+    }
     return { label: "Round complete · official grid", tone: "ok", detail: "A finished round: the projection uses the real qualifying, grid, and sprint, so you can compare it with the actual points." };
   }
   const parts: string[] = [];

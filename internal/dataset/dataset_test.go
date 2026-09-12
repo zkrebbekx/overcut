@@ -68,6 +68,80 @@ func TestDue(t *testing.T) {
 	})
 }
 
+func TestProvisional(t *testing.T) {
+	race := time.Date(2026, 9, 6, 13, 0, 0, 0, time.UTC)
+	asset := func(pts float64) Asset {
+		return Asset{ID: "a", Kind: KindDriver, History: []AssetRound{{Gameday: 13, Points: pts}}}
+	}
+	round := func(seen time.Time) Round {
+		return Round{Round: 13, HasResults: true, Sessions: map[string]time.Time{"Race": race}, PointsSeenAt: seen}
+	}
+
+	Convey("Given a round synced an hour after its race", t, func() {
+		seen := race.Add(3 * time.Hour)
+		r := round(seen)
+
+		Convey("When six hours have passed", func() {
+			Convey("Then the points are provisional", func() {
+				So(r.Provisional(seen.Add(6*time.Hour)), ShouldBeTrue)
+			})
+		})
+		Convey("When a day and a half has passed with no change", func() {
+			Convey("Then the points are final", func() {
+				So(r.Provisional(seen.Add(36*time.Hour)), ShouldBeFalse)
+			})
+		})
+	})
+
+	Convey("Given a round first synced a week after its race", t, func() {
+		r := round(race.Add(7 * 24 * time.Hour))
+		Convey("Then the points are final at once", func() {
+			So(r.Provisional(race.Add(7*24*time.Hour+time.Minute)), ShouldBeFalse)
+		})
+	})
+
+	Convey("Given a previous sync and a new sync", t, func() {
+		seen := race.Add(3 * time.Hour)
+		prev := Data{Rounds: []Round{round(seen)}, Assets: []Asset{asset(67)}}
+
+		Convey("When the points are unchanged", func() {
+			d := Data{Rounds: []Round{round(time.Time{})}, Assets: []Asset{asset(67)}}
+			carryPointsSeen(&d, &prev, seen.Add(20*time.Hour))
+			Convey("Then the first-seen time carries over", func() {
+				So(d.Rounds[0].PointsSeenAt, ShouldEqual, seen)
+			})
+		})
+		Convey("When the points changed", func() {
+			now := seen.Add(20 * time.Hour)
+			d := Data{Rounds: []Round{round(time.Time{})}, Assets: []Asset{asset(93)}}
+			carryPointsSeen(&d, &prev, now)
+			Convey("Then the clock restarts at this sync", func() {
+				So(d.Rounds[0].PointsSeenAt, ShouldEqual, now)
+				So(d.Rounds[0].Provisional(now.Add(time.Hour)), ShouldBeTrue)
+			})
+		})
+	})
+
+	Convey("Given provisional points, the race window closed, and seven hours since the last check", t, func() {
+		seen := race.Add(3 * time.Hour)
+		d := Data{SyncedAt: seen, Rounds: []Round{round(seen)}}
+		reason, due := d.Due(race.Add(10 * time.Hour))
+		Convey("Then a sync is due to look for the final points", func() {
+			So(due, ShouldBeTrue)
+			So(reason, ShouldContainSubstring, "provisional")
+		})
+	})
+
+	Convey("Given provisional points but a check only an hour ago, outside the race window", t, func() {
+		seen := race.Add(3 * time.Hour)
+		d := Data{SyncedAt: race.Add(9 * time.Hour), Rounds: []Round{round(seen)}}
+		_, due := d.Due(race.Add(10 * time.Hour))
+		Convey("Then no sync is due yet", func() {
+			So(due, ShouldBeFalse)
+		})
+	})
+}
+
 func TestQualiOrder(t *testing.T) {
 	Convey("Given a round with a qualifying classification", t, func() {
 		r := Round{Quali: map[string]int{"HAM": 3, "GAS": 1, "RUS": 2}}

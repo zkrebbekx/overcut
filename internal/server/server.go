@@ -145,7 +145,8 @@ func (s *Server) handleReview(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSync(w http.ResponseWriter, r *http.Request) {
-	d, err := dataset.Sync(s.engine.Data().Season)
+	prev := s.engine.Data()
+	d, err := dataset.Sync(prev.Season, &prev)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, err)
 		return

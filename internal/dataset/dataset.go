@@ -47,6 +47,12 @@ type Round struct {
 	// Sprint, Qualifying, Race) to its scheduled start in UTC.
 	Sessions map[string]time.Time `json:"sessions,omitempty"`
 
+	// PointsSeenAt is the sync time at which the round's current official
+	// points were first observed. The game publishes provisional points
+	// on race day and finalises them within a day, so a round counts as
+	// provisional until its points have stood unchanged for StableWindow.
+	PointsSeenAt time.Time `json:"points_seen_at,omitempty"`
+
 	// Quali maps a driver TLA to the final qualifying position.
 	Quali map[string]int `json:"quali,omitempty"`
 	// Grid maps a driver TLA to the official starting position with
@@ -287,6 +293,17 @@ func (d Data) Due(now time.Time) (string, bool) {
 			}
 		}
 	}
+	// After a race, keep checking for the finalised points.
+	for _, r := range d.Rounds {
+		race, ok := r.Sessions["Race"]
+		if !ok || !r.HasResults {
+			continue
+		}
+		end := race.Add(sessionLength["Race"])
+		if now.After(end) && now.Before(end.Add(SettleWindow)) && r.Provisional(now) && now.Sub(d.SyncedAt) >= SettleInterval {
+			return fmt.Sprintf("round %d points are provisional and the last check was %s ago", r.Round, now.Sub(d.SyncedAt).Round(time.Minute)), true
+		}
+	}
 	if now.Sub(d.SyncedAt) > MaxAge {
 		return fmt.Sprintf("dataset is %s old", now.Sub(d.SyncedAt).Round(time.Hour)), true
 	}
@@ -326,8 +343,77 @@ func classified(positionText string) bool {
 	return positionText != "" && positionText[0] >= '0' && positionText[0] <= '9'
 }
 
-// Sync downloads the season from both sources and joins it.
-func Sync(season int) (Data, error) {
+// StableWindow is how long a finished round's points must stand unchanged
+// before they count as final.
+const StableWindow = 24 * time.Hour
+
+// SettleWindow is how long after a race the sync keeps checking for the
+// finalised points at SettleInterval instead of the daily refresh.
+const (
+	SettleWindow   = 36 * time.Hour
+	SettleInterval = 2 * time.Hour
+)
+
+// Provisional reports whether a finished round's official points may
+// still change: the race ended recently and the current values have not
+// stood for StableWindow. A round first synced long after its race is
+// final at once.
+func (r Round) Provisional(now time.Time) bool {
+	if !r.HasResults || r.PointsSeenAt.IsZero() {
+		return false
+	}
+	if race, ok := r.Sessions["Race"]; ok && r.PointsSeenAt.Sub(race) > 3*24*time.Hour {
+		return false
+	}
+	return now.Sub(r.PointsSeenAt) < StableWindow
+}
+
+// pointsKey summarises every asset's official points for one gameday so
+// two syncs can be compared.
+func pointsKey(d Data, gameday int) string {
+	var parts []string
+	for _, a := range d.Assets {
+		if h, ok := a.RoundHistory(gameday); ok {
+			parts = append(parts, fmt.Sprintf("%s=%g/%g/%g/%g", a.ID, h.Points, h.QualiPts, h.SprintPts, h.RacePts))
+		}
+	}
+	sort.Strings(parts)
+	return fmt.Sprint(parts)
+}
+
+// carryPointsSeen sets each round's PointsSeenAt: the previous value when
+// the round's points are unchanged since the previous sync, otherwise now.
+func carryPointsSeen(d *Data, prev *Data, now time.Time) {
+	for i := range d.Rounds {
+		r := &d.Rounds[i]
+		if !r.HasResults {
+			continue
+		}
+		r.PointsSeenAt = now
+		if prev == nil {
+			continue
+		}
+		for _, pr := range prev.Rounds {
+			if pr.Round == r.Round && pr.HasResults && !pr.PointsSeenAt.IsZero() && pointsKey(*prev, r.Round) == pointsKey(*d, r.Round) {
+				r.PointsSeenAt = pr.PointsSeenAt
+			}
+		}
+	}
+}
+
+// Sync downloads the season from both sources and joins it. prev is the
+// previous dataset, used to tell provisional points from final ones; nil
+// when there is none.
+func Sync(season int, prev *Data) (Data, error) {
+	d, err := sync(season)
+	if err != nil {
+		return d, err
+	}
+	carryPointsSeen(&d, prev, d.SyncedAt)
+	return d, nil
+}
+
+func sync(season int) (Data, error) {
 	jc := jolpica.New()
 
 	schedule, err := jc.Schedule(season)

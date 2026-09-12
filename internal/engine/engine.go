@@ -91,6 +91,9 @@ type RoundView struct {
 	// data.
 	HasSprintResult bool                 `json:"has_sprint_result"`
 	Sessions        map[string]time.Time `json:"sessions,omitempty"`
+	// Provisional reports that the round's official points may still
+	// change: the game finalises points within a day of the race.
+	Provisional bool `json:"provisional"`
 }
 
 // AssetView is one asset with its history.
@@ -143,6 +146,7 @@ func (e *Engine) Season() SeasonView {
 			Round: r.Round, Name: r.Name, CircuitID: r.CircuitID, Date: r.Date,
 			HasSprint: r.HasSprint, HasResults: r.HasResults,
 			HasQuali: len(r.Quali) > 0, HasGrid: r.GridOrder() != nil, HasSprintResult: len(r.Sprint) > 0, Sessions: r.Sessions,
+			Provisional: r.Provisional(time.Now().UTC()),
 		})
 	}
 	for _, a := range d.Assets {
@@ -884,6 +888,8 @@ type ReviewView struct {
 	Assets    []ReviewAsset `json:"assets"`   // ordered by |delta|, largest first
 	Coverage  float64       `json:"coverage"` // share of drivers inside P10–P90
 	DriverMAE float64       `json:"driver_mae"`
+	// Provisional reports that the official points may still be revised.
+	Provisional bool `json:"provisional"`
 
 	// Team review, when a team was given.
 	TeamProjected float64 `json:"team_projected"`
@@ -921,7 +927,8 @@ func (e *Engine) Review(in ReviewInput) (ReviewView, error) {
 	for _, id := range in.Team {
 		held[id] = true
 	}
-	v := ReviewView{Round: target.Round, Name: target.Name, HasSprint: target.HasSprint, Sims: sim.Sims}
+	v := ReviewView{Round: target.Round, Name: target.Name, HasSprint: target.HasSprint, Sims: sim.Sims,
+		Provisional: target.Provisional(time.Now().UTC())}
 	var drivers, inRange float64
 	bestHeld := math.Inf(-1)
 	for _, a := range e.data.Assets {

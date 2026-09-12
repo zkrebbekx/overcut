@@ -55,6 +55,11 @@ export function ReviewView({ season, state }: { season: SeasonView; state: Playe
           ))}
         </select>
         <span className="text-xs text-ink-3">What the model expected on Sunday morning (grid known) against what happened.</span>
+        {data?.provisional && (
+          <span className="chip px-2 py-1 text-xs text-warn" title="The game publishes provisional points on race day and finalises them within about a day. This review updates automatically.">
+            Provisional points
+          </span>
+        )}
       </div>
 
       {error && <ErrorBox error={error} />}

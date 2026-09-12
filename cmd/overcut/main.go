@@ -131,9 +131,10 @@ func cmdSync(args []string) error {
 	whenDue := fs.Bool("when-due", false, "sync only when a session ended recently or the data is stale")
 	fs.Parse(args)
 
-	if *whenDue {
-		existing, err := dataset.Load(c.dataPath())
-		if err == nil {
+	var prev *dataset.Data
+	if existing, err := dataset.Load(c.dataPath()); err == nil {
+		prev = &existing
+		if *whenDue {
 			reason, due := existing.Due(time.Now().UTC())
 			if !due {
 				fmt.Printf("skip: %s\n", reason)
@@ -147,9 +148,14 @@ func cmdSync(args []string) error {
 	}
 
 	fmt.Printf("syncing season %d…\n", c.season)
-	d, err := dataset.Sync(c.season)
+	d, err := dataset.Sync(c.season, prev)
 	if err != nil {
 		return err
+	}
+	for _, r := range d.Rounds {
+		if r.Provisional(time.Now().UTC()) {
+			fmt.Printf("round %d points are provisional (seen %s)\n", r.Round, r.PointsSeenAt.Format(time.RFC3339))
+		}
 	}
 	if err := dataset.Save(d, c.dataPath()); err != nil {
 		return err
