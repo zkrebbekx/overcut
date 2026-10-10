@@ -12,6 +12,7 @@ export interface RoundView {
   has_quali: boolean;
   has_grid: boolean;
   has_sprint_result: boolean;
+  has_sprint_quali: boolean;
   sessions?: Record<string, string>;
   provisional: boolean;
 }
@@ -123,6 +124,7 @@ export interface ProjectionView {
   quali_from_data: boolean;
   grid_from_data: boolean;
   sprint_from_data: boolean;
+  sprint_grid_from_data: boolean;
   assets: AssetProjection[];
 }
 

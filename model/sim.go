@@ -66,9 +66,11 @@ type Conditions struct {
 	Practice map[string]int
 
 	// SprintGrid and SprintFinish are the actual sprint grid and sprint
-	// classification (1-based) on a sprint weekend, once the sprint has
+	// classification (1-based) on a sprint weekend. SprintGrid is known
+	// once sprint qualifying has run; SprintFinish once the sprint has
 	// run. SprintDNF lists the cars that did not classify. When
-	// SprintFinish is set the model does not sample the sprint leg.
+	// SprintFinish is set the model does not sample the sprint leg; when
+	// only SprintGrid is set the model samples the sprint from that grid.
 	SprintGrid   map[string]int
 	SprintFinish map[string]int
 	SprintDNF    map[string]bool
@@ -229,16 +231,30 @@ func (m Model) SimulateWith(round int, hasSprint bool, sims int, seed uint64, co
 				sprintDNF[i] = cond.SprintDNF[dm.TLA] || sprintPos[i] == 0
 			}
 		} else if hasSprint {
-			for i, dm := range m.Drivers {
-				scores[i] = dm.QualiMu + rng.NormFloat64()*dm.QualiSD
+			// Use the known sprint grid (sprint qualifying has run), or
+			// sample one.
+			if len(cond.SprintGrid) > 0 {
+				sqPos = make([]int, n)
+				for i, dm := range m.Drivers {
+					sqPos[i] = cond.SprintGrid[dm.TLA]
+					if sqPos[i] == 0 {
+						sqPos[i] = n
+					}
+				}
+			} else {
+				for i, dm := range m.Drivers {
+					scores[i] = dm.QualiMu + rng.NormFloat64()*dm.QualiSD
+				}
+				sqPos = rank(scores)
 			}
-			sqPos = rank(scores)
 			sprintDNF = make([]bool, n)
 			for i, dm := range m.Drivers {
 				// A sprint is about a third of a race distance; scale the
-				// retirement risk down accordingly.
+				// retirement risk down accordingly. The sprint grid slot
+				// blends in the same way as in the race.
 				sprintDNF[i] = rng.Float64() < dm.DNFProb/3
-				scores[i] = dm.RaceMu + rng.NormFloat64()*dm.RaceSD
+				pace := (1-GridInfluence)*dm.RaceMu + GridInfluence*float64(sqPos[i])
+				scores[i] = pace + rng.NormFloat64()*dm.RaceSD
 				if sprintDNF[i] {
 					scores[i] += 1000
 				}

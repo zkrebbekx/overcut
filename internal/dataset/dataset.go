@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -59,6 +60,10 @@ type Round struct {
 	// penalties applied. It is set from the official grid page once that
 	// is published, before the race.
 	Grid map[string]int `json:"grid,omitempty"`
+	// SprintQuali maps a driver TLA to the sprint qualifying position. It
+	// is set from the official classification page once sprint qualifying
+	// has run, and gives the sprint grid before the sprint has run.
+	SprintQuali map[string]int `json:"sprint_quali,omitempty"`
 	// Race maps a driver TLA to the race row.
 	Race map[string]RaceRow `json:"race,omitempty"`
 	// Sprint maps a driver TLA to the sprint row.
@@ -120,16 +125,24 @@ func (a Asset) RoundHistory(gameday int) (AssetRound, bool) {
 }
 
 // fetchGrids fills Round.Grid from the official grid page for every round
-// that has qualified but not raced. Errors are reported on stderr and
-// otherwise ignored.
-func fetchGrids(season int, rounds map[int]*Round) {
-	var pending []*Round
+// that has qualified but not raced, and Round.SprintQuali from the sprint
+// qualifying page for every sprint round whose sprint qualifying has
+// started and whose sprint has no result yet. Errors are reported on
+// stderr and otherwise ignored.
+func fetchGrids(season int, rounds map[int]*Round, now time.Time) {
+	var grids, sprints []*Round
 	for _, rd := range rounds {
-		if len(rd.Quali) > 0 && !rd.HasResults {
-			pending = append(pending, rd)
+		if rd.HasResults {
+			continue
+		}
+		if len(rd.Quali) > 0 {
+			grids = append(grids, rd)
+		}
+		if sprintQualiDue(*rd, now) {
+			sprints = append(sprints, rd)
 		}
 	}
-	if len(pending) == 0 {
+	if len(grids) == 0 && len(sprints) == 0 {
 		return
 	}
 	index, err := f1site.Index(nil, season)
@@ -137,26 +150,69 @@ func fetchGrids(season int, rounds map[int]*Round) {
 		fmt.Fprintln(os.Stderr, "warning:", err)
 		return
 	}
-	for _, rd := range pending {
+	fetch := func(rd *Round, get func(*http.Client, int, f1site.Race) ([]f1site.GridRow, error)) map[string]int {
 		race, ok := f1site.MatchRace(index, rd.Name)
 		if !ok {
 			fmt.Fprintf(os.Stderr, "warning: no official results entry for %q\n", rd.Name)
-			continue
+			return nil
 		}
-		rows, err := f1site.StartingGrid(nil, season, race)
+		rows, err := get(nil, season, race)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "warning:", err)
-			continue
+			return nil
 		}
-		grid := map[string]int{}
+		out := map[string]int{}
 		for _, row := range rows {
-			grid[row.Code] = row.Position
+			out[row.Code] = row.Position
 		}
+		return out
+	}
+	for _, rd := range grids {
 		// Accept the grid only when it covers the qualified field.
-		if len(grid) >= len(rd.Quali) {
+		if grid := fetch(rd, f1site.StartingGrid); len(grid) >= len(rd.Quali) {
 			rd.Grid = grid
 		}
 	}
+	for _, rd := range sprints {
+		if sq := fetch(rd, f1site.SprintQualifying); len(sq) > 0 {
+			rd.SprintQuali = sq
+		}
+	}
+}
+
+// sprintQualiDue reports whether a round's sprint qualifying order is
+// worth fetching: the round has a sprint, sprint qualifying has started,
+// and the sprint has no result yet.
+func sprintQualiDue(r Round, now time.Time) bool {
+	if !r.HasSprint || len(r.Sprint) > 0 || r.HasResults {
+		return false
+	}
+	start, ok := r.Sessions["SprintQualifying"]
+	return ok && now.After(start)
+}
+
+// SprintGridOrder returns the sprint grid as TLAs from P1. After the
+// sprint the order comes from the sprint classification; before it, from
+// the official sprint qualifying order. It returns nil when neither is
+// known.
+func (r Round) SprintGridOrder() []string {
+	if _, grid, _ := r.SprintOrder(); grid != nil {
+		return grid
+	}
+	if len(r.SprintQuali) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(r.SprintQuali))
+	for tla := range r.SprintQuali {
+		out = append(out, tla)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if r.SprintQuali[out[i]] != r.SprintQuali[out[j]] {
+			return r.SprintQuali[out[i]] < r.SprintQuali[out[j]]
+		}
+		return out[i] < out[j]
+	})
+	return out
 }
 
 // GridOrder returns the official starting grid as TLAs from P1. Before the
@@ -285,6 +341,11 @@ func (d Data) Due(now time.Time) (string, bool) {
 				return fmt.Sprintf("round %d has qualified and the official grid is not in yet", r.Round), true
 			}
 		}
+		if sprintQualiDue(r, now) && len(r.SprintQuali) == 0 {
+			if sq, ok := r.Sessions["SprintQualifying"]; ok && now.After(sq.Add(sessionLength["SprintQualifying"])) {
+				return fmt.Sprintf("round %d has run sprint qualifying and its order is not in yet", r.Round), true
+			}
+		}
 		if r.HasSprint && len(r.Sprint) == 0 && !r.HasResults {
 			if s, ok := r.Sessions["Sprint"]; ok && now.After(s.Add(sessionLength["Sprint"])) {
 				if race, ok := r.Sessions["Race"]; !ok || now.Before(race) {
@@ -410,7 +471,29 @@ func Sync(season int, prev *Data) (Data, error) {
 		return d, err
 	}
 	carryPointsSeen(&d, prev, d.SyncedAt)
+	carrySprintQuali(&d, prev)
 	return d, nil
+}
+
+// carrySprintQuali keeps a sprint qualifying order from the previous sync
+// when this sync could not fetch it, so that a transient page failure
+// does not hide a known sprint grid.
+func carrySprintQuali(d *Data, prev *Data) {
+	if prev == nil {
+		return
+	}
+	old := map[int]map[string]int{}
+	for _, r := range prev.Rounds {
+		if len(r.SprintQuali) > 0 {
+			old[r.Round] = r.SprintQuali
+		}
+	}
+	for i := range d.Rounds {
+		r := &d.Rounds[i]
+		if len(r.SprintQuali) == 0 && len(r.Sprint) == 0 && !r.HasResults && old[r.Round] != nil {
+			r.SprintQuali = old[r.Round]
+		}
+	}
 }
 
 func sync(season int) (Data, error) {
@@ -507,7 +590,7 @@ func sync(season int) (Data, error) {
 	}
 	// The official starting grid, for rounds between qualifying and the
 	// race. A failure here is not fatal: the grid is an enrichment.
-	fetchGrids(season, rounds)
+	fetchGrids(season, rounds, time.Now())
 
 	for i := 1; i <= len(rounds); i++ {
 		if rd, ok := rounds[i]; ok {

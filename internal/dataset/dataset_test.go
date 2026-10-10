@@ -212,3 +212,66 @@ func TestSelectable(t *testing.T) {
 		})
 	})
 }
+
+func TestSprintGridOrder(t *testing.T) {
+	Convey("Given a sprint round with sprint qualifying run at 09:30 and no sprint result", t, func() {
+		sq := time.Date(2026, 10, 9, 9, 30, 0, 0, time.UTC)
+		r := Round{
+			Round: 17, HasSprint: true,
+			Sessions:    map[string]time.Time{"SprintQualifying": sq, "Sprint": sq.Add(24 * time.Hour)},
+			SprintQuali: map[string]int{"ANT": 7, "VER": 1, "RUS": 2},
+		}
+
+		Convey("When the sprint grid order is read", func() {
+			Convey("Then it follows the sprint qualifying positions", func() {
+				So(r.SprintGridOrder(), ShouldResemble, []string{"VER", "RUS", "ANT"})
+			})
+		})
+
+		Convey("When the sprint has run", func() {
+			r.Sprint = map[string]RaceRow{"RUS": {Grid: 1, Pos: 1}, "VER": {Grid: 2, Pos: 2}}
+			Convey("Then the order comes from the sprint classification grid", func() {
+				So(r.SprintGridOrder(), ShouldResemble, []string{"RUS", "VER"})
+			})
+		})
+
+		Convey("When the clock is before and after sprint qualifying starts", func() {
+			Convey("Then the sprint qualifying order is due only after the start", func() {
+				So(sprintQualiDue(r, sq.Add(-time.Minute)), ShouldBeFalse)
+				So(sprintQualiDue(r, sq.Add(time.Minute)), ShouldBeTrue)
+			})
+		})
+
+		Convey("When sprint qualifying ended eight hours ago and its order is not stored", func() {
+			r.SprintQuali = nil
+			d := Data{SyncedAt: sq, Rounds: []Round{r}}
+			reason, due := d.Due(sq.Add(9 * time.Hour))
+			Convey("Then a sync is due and names the sprint qualifying order", func() {
+				So(due, ShouldBeTrue)
+				So(reason, ShouldContainSubstring, "sprint qualifying")
+			})
+		})
+	})
+}
+
+func TestCarrySprintQuali(t *testing.T) {
+	Convey("Given a previous sync that stored a sprint qualifying order", t, func() {
+		prev := Data{Rounds: []Round{{Round: 17, HasSprint: true, SprintQuali: map[string]int{"VER": 1}}}}
+
+		Convey("When the next sync could not fetch the order", func() {
+			d := Data{Rounds: []Round{{Round: 17, HasSprint: true}}}
+			carrySprintQuali(&d, &prev)
+			Convey("Then the stored order is kept", func() {
+				So(d.Rounds[0].SprintQuali, ShouldResemble, map[string]int{"VER": 1})
+			})
+		})
+
+		Convey("When the sprint has run in the next sync", func() {
+			d := Data{Rounds: []Round{{Round: 17, HasSprint: true, Sprint: map[string]RaceRow{"VER": {Pos: 1}}}}}
+			carrySprintQuali(&d, &prev)
+			Convey("Then the old order is not carried", func() {
+				So(d.Rounds[0].SprintQuali, ShouldBeNil)
+			})
+		})
+	})
+}

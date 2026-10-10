@@ -63,7 +63,7 @@ export default function App() {
     return season.rounds.find((r) => r.round === n) ?? null;
   }, [season, state.round]);
 
-  const knows = describeKnowledge(state.conditions, !!round?.has_quali, !!round?.has_grid, !!round?.has_results, !!round?.has_sprint && !!round?.has_sprint_result, !!round?.provisional);
+  const knows = describeKnowledge(state.conditions, !!round?.has_quali, !!round?.has_grid, !!round?.has_results, !!round?.has_sprint && !!round?.has_sprint_result, !!round?.provisional, !!round?.has_sprint && !!round?.has_sprint_quali);
 
   async function sync() {
     if (!api.sync) return;
@@ -206,7 +206,7 @@ function teamFromURL(season: SeasonView): Partial<PlayerState> | null {
   return patch;
 }
 
-function describeKnowledge(c: { quali?: string[]; grid?: string[]; back?: string[]; fp3?: string[] }, officialQuali: boolean, officialGrid: boolean, complete: boolean, sprintResult: boolean, provisional: boolean) {
+function describeKnowledge(c: { quali?: string[]; grid?: string[]; back?: string[]; fp3?: string[] }, officialQuali: boolean, officialGrid: boolean, complete: boolean, sprintResult: boolean, provisional: boolean, sprintQuali = false) {
   if (complete && !c.grid?.length && !c.quali?.length) {
     if (provisional) {
       return { label: "Round complete · provisional points", tone: "warn", detail: "The game publishes provisional points on race day and finalises them within about a day. The data refreshes automatically." };
@@ -219,6 +219,7 @@ function describeKnowledge(c: { quali?: string[]; grid?: string[]; back?: string
   else if (c.quali?.length) parts.push("qualifying");
   else if (officialQuali) parts.push("official qualifying");
   if (sprintResult) parts.push("sprint result");
+  else if (sprintQuali) parts.push("sprint grid");
   if (c.back?.length && !officialGrid && !c.grid?.length) parts.push("penalties");
   if (c.fp3?.length) parts.push("FP3");
   if (parts.length === 0) {

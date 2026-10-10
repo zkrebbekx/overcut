@@ -161,3 +161,28 @@ func TestSimulate(t *testing.T) {
 		})
 	})
 }
+
+func TestSprintGrid(t *testing.T) {
+	Convey("Given a model fitted on a synthetic season and a sprint weekend", t, func() {
+		m := Fit(syntheticSeason(), rules.Default(), 5)
+		fast, _ := m.DriverByTLA("AAA")
+
+		Convey("When the fastest driver starts the sprint from the back", func() {
+			grid := map[string]int{"AAB": 1, "BBA": 2, "BBB": 3, "CCA": 4, "CCB": 5, "AAA": 6}
+			sampled := m.SimulateWith(6, true, 4000, 7, Conditions{})
+			known := m.SimulateWith(6, true, 4000, 7, Conditions{SprintGrid: grid})
+			again := m.SimulateWith(6, true, 4000, 7, Conditions{SprintGrid: grid})
+
+			k, _ := known.ByID(fast.AssetID)
+			s, _ := sampled.ByID(fast.AssetID)
+			a, _ := again.ByID(fast.AssetID)
+
+			Convey("Then the projection uses the known grid instead of a sampled one", func() {
+				So(k.Mean, ShouldNotEqual, s.Mean)
+			})
+			Convey("Then the same grid and seed give the same projection", func() {
+				So(a.Mean, ShouldEqual, k.Mean)
+			})
+		})
+	})
+}

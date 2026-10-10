@@ -89,8 +89,11 @@ type RoundView struct {
 	HasGrid bool `json:"has_grid"`
 	// HasSprintResult reports that the sprint classification is in the
 	// data.
-	HasSprintResult bool                 `json:"has_sprint_result"`
-	Sessions        map[string]time.Time `json:"sessions,omitempty"`
+	HasSprintResult bool `json:"has_sprint_result"`
+	// HasSprintQuali reports that the official sprint qualifying order is
+	// in the data, so the sprint grid is known before the sprint.
+	HasSprintQuali bool                 `json:"has_sprint_quali"`
+	Sessions       map[string]time.Time `json:"sessions,omitempty"`
 	// Provisional reports that the round's official points may still
 	// change: the game finalises points within a day of the race.
 	Provisional bool `json:"provisional"`
@@ -145,7 +148,7 @@ func (e *Engine) Season() SeasonView {
 		v.Rounds = append(v.Rounds, RoundView{
 			Round: r.Round, Name: r.Name, CircuitID: r.CircuitID, Date: r.Date,
 			HasSprint: r.HasSprint, HasResults: r.HasResults,
-			HasQuali: len(r.Quali) > 0, HasGrid: r.GridOrder() != nil, HasSprintResult: len(r.Sprint) > 0, Sessions: r.Sessions,
+			HasQuali: len(r.Quali) > 0, HasGrid: r.GridOrder() != nil, HasSprintResult: len(r.Sprint) > 0, HasSprintQuali: len(r.SprintQuali) > 0, Sessions: r.Sessions,
 			Provisional: r.Provisional(time.Now().UTC()),
 		})
 	}
@@ -259,14 +262,17 @@ type ProjectionView struct {
 	Conditions Conditions `json:"conditions"`
 	// QualiFromData, GridFromData, and SprintFromData report which parts of
 	// the weekend state came from the official data rather than the caller.
-	QualiFromData  bool              `json:"quali_from_data"`
-	GridFromData   bool              `json:"grid_from_data"`
-	SprintFromData bool              `json:"sprint_from_data"`
-	Assets         []AssetProjection `json:"assets"`
+	QualiFromData  bool `json:"quali_from_data"`
+	GridFromData   bool `json:"grid_from_data"`
+	SprintFromData bool `json:"sprint_from_data"`
+	// SprintGridFromData reports that the sprint grid came from the
+	// official sprint qualifying order.
+	SprintGridFromData bool              `json:"sprint_grid_from_data"`
+	Assets             []AssetProjection `json:"assets"`
 }
 
 // known records which parts of the weekend state came from the data.
-type known struct{ quali, grid, sprint bool }
+type known struct{ quali, grid, sprint, sprintGrid bool }
 
 // withKnownWeekend fills an empty qualifying order, grid, and sprint result
 // from the official data: the published grid before the race, the race
@@ -296,6 +302,14 @@ func withKnownWeekend(target dataset.Round, cond Conditions) (Conditions, known)
 			}
 			sort.Strings(cond.SprintDNF)
 			k.sprint = true
+		}
+	}
+	// Before the sprint, the official sprint qualifying order is the
+	// sprint grid.
+	if target.HasSprint && len(cond.Sprint) == 0 && len(cond.SprintGrid) == 0 {
+		if order := target.SprintGridOrder(); order != nil {
+			cond.SprintGrid = order
+			k.sprintGrid = true
 		}
 	}
 	return cond, k
@@ -411,7 +425,7 @@ func (e *Engine) Project(in ProjectInput) (ProjectionView, error) {
 	cond, k := withKnownWeekend(target, in.Conditions)
 	sim := e.simulate(target, in.Sims, in.Seed, cond)
 	view := e.projectionView(target, sim, cond)
-	view.QualiFromData, view.GridFromData, view.SprintFromData = k.quali, k.grid, k.sprint
+	view.QualiFromData, view.GridFromData, view.SprintFromData, view.SprintGridFromData = k.quali, k.grid, k.sprint, k.sprintGrid
 	return view, nil
 }
 
@@ -677,7 +691,7 @@ func (e *Engine) Optimize(in OptimizeInput) (OptimizeView, error) {
 		Round: target.Round, Name: target.Name, Risk: in.Risk, Chip: in.Chip, Budget: baseOpt.Budget,
 		Projection: e.projectionView(target, sim, cond),
 	}
-	view.Projection.QualiFromData, view.Projection.GridFromData, view.Projection.SprintFromData = k.quali, k.grid, k.sprint
+	view.Projection.QualiFromData, view.Projection.GridFromData, view.Projection.SprintFromData, view.Projection.SprintGridFromData = k.quali, k.grid, k.sprint, k.sprintGrid
 	for _, t := range teams {
 		tv := teamView(t, current)
 		if s := teamSamples(sim, t, noNegative); len(s) > 0 {

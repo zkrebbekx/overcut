@@ -146,7 +146,23 @@ func StartingGrid(client *http.Client, season int, race Race) ([]GridRow, error)
 	return rows, nil
 }
 
-// ParseGrid extracts the grid rows from a starting-grid page. It returns
+// SprintQualifying fetches the official sprint qualifying classification
+// for a race id. The rows have the same shape as the grid rows, and the
+// order is the sprint grid before any penalty.
+func SprintQualifying(client *http.Client, season int, race Race) ([]GridRow, error) {
+	page, err := get(client, fmt.Sprintf("%s/en/results/%d/races/%d/%s/sprint-qualifying", BaseURL, season, race.ID, race.Slug))
+	if err != nil {
+		return nil, err
+	}
+	rows := ParseGrid(page)
+	if len(rows) == 0 {
+		return nil, fmt.Errorf("f1site: no sprint qualifying rows on the page for race %d", race.ID)
+	}
+	return rows, nil
+}
+
+// ParseGrid extracts the grid rows from a starting-grid page or a
+// classification page with the same leading columns. It returns
 // nil when the page has no grid table yet.
 func ParseGrid(page string) []GridRow {
 	table := tableRe.FindString(page)

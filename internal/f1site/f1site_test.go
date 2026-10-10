@@ -1,6 +1,10 @@
 package f1site
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -58,6 +62,32 @@ func TestParseGrid(t *testing.T) {
 		Convey("When the page has no table", func() {
 			Convey("Then the result is nil", func() {
 				So(ParseGrid("<html><body>Not yet</body></html>"), ShouldBeNil)
+			})
+		})
+	})
+}
+
+func TestSprintQualifying(t *testing.T) {
+	Convey("Given a local server with a sprint qualifying page", t, func() {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.HasSuffix(r.URL.Path, "/sprint-qualifying") {
+				fmt.Fprint(w, gridPage)
+				return
+			}
+			http.NotFound(w, r)
+		}))
+		defer srv.Close()
+		old := BaseURL
+		BaseURL = srv.URL
+		defer func() { BaseURL = old }()
+
+		Convey("When the sprint qualifying order is fetched", func() {
+			rows, err := SprintQualifying(nil, 2026, Race{ID: 1296, Slug: "singapore"})
+			Convey("Then the rows come back in classification order", func() {
+				So(err, ShouldBeNil)
+				So(rows, ShouldHaveLength, 3)
+				So(rows[0].Code, ShouldEqual, "GAS")
+				So(rows[2].Position, ShouldEqual, 20)
 			})
 		})
 	})
