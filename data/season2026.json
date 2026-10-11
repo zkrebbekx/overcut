@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "synced_at": "2026-10-10T19:30:43.737405392Z",
+ "synced_at": "2026-10-11T01:36:02.191270426Z",
  "rounds": [
   {
    "round": 1,
@@ -3020,29 +3020,165 @@
     "SprintQualifying": "2026-10-09T12:30:00Z"
    },
    "points_seen_at": "0001-01-01T00:00:00Z",
-   "sprint_quali": {
-    "ALB": 19,
-    "ALO": 15,
-    "ANT": 7,
-    "BEA": 13,
-    "BOR": 14,
+   "quali": {
+    "ALB": 18,
+    "ALO": 17,
+    "ANT": 4,
+    "BEA": 12,
+    "BOR": 15,
     "BOT": 21,
-    "COL": 11,
-    "GAS": 10,
-    "HAD": 9,
-    "HAM": 6,
-    "HUL": 12,
-    "LAW": 8,
-    "LEC": 3,
-    "LIN": 17,
+    "COL": 16,
+    "GAS": 8,
+    "HAD": 22,
+    "HAM": 3,
+    "HUL": 11,
+    "LAW": 9,
+    "LEC": 2,
+    "LIN": 10,
     "NOR": 5,
-    "OCO": 16,
+    "OCO": 13,
     "PER": 20,
-    "PIA": 4,
-    "RUS": 2,
-    "SAI": 22,
+    "PIA": 7,
+    "RUS": 6,
+    "SAI": 14,
+    "STR": 19,
+    "VER": 1
+   },
+   "grid": {
+    "ALB": 17,
+    "ALO": 16,
+    "ANT": 4,
+    "BEA": 11,
+    "BOR": 14,
+    "BOT": 20,
+    "COL": 15,
+    "GAS": 7,
+    "HAD": 22,
+    "HAM": 3,
+    "HUL": 10,
+    "LAW": 8,
+    "LEC": 2,
+    "LIN": 9,
+    "NOR": 5,
+    "OCO": 12,
+    "PER": 19,
+    "PIA": 6,
+    "RUS": 21,
+    "SAI": 13,
     "STR": 18,
     "VER": 1
+   },
+   "sprint": {
+    "ALB": {
+     "grid": 19,
+     "pos": 15,
+     "dnf": true
+    },
+    "ALO": {
+     "grid": 15,
+     "pos": 11,
+     "dnf": false
+    },
+    "ANT": {
+     "grid": 7,
+     "pos": 4,
+     "dnf": false
+    },
+    "BEA": {
+     "grid": 13,
+     "pos": 6,
+     "dnf": false
+    },
+    "BOR": {
+     "grid": 14,
+     "pos": 16,
+     "dnf": true
+    },
+    "BOT": {
+     "grid": 21,
+     "pos": 17,
+     "dnf": true
+    },
+    "COL": {
+     "grid": 11,
+     "pos": 19,
+     "dnf": true
+    },
+    "GAS": {
+     "grid": 10,
+     "pos": 9,
+     "dnf": false
+    },
+    "HAD": {
+     "grid": 9,
+     "pos": 18,
+     "dnf": true
+    },
+    "HAM": {
+     "grid": 6,
+     "pos": 2,
+     "dnf": false
+    },
+    "HUL": {
+     "grid": 12,
+     "pos": 7,
+     "dnf": false
+    },
+    "LAW": {
+     "grid": 8,
+     "pos": 5,
+     "dnf": false
+    },
+    "LEC": {
+     "grid": 3,
+     "pos": 3,
+     "dnf": false
+    },
+    "LIN": {
+     "grid": 17,
+     "pos": 13,
+     "dnf": false
+    },
+    "NOR": {
+     "grid": 5,
+     "pos": 8,
+     "dnf": false
+    },
+    "OCO": {
+     "grid": 16,
+     "pos": 10,
+     "dnf": false
+    },
+    "PER": {
+     "grid": 20,
+     "pos": 21,
+     "dnf": true
+    },
+    "PIA": {
+     "grid": 4,
+     "pos": 14,
+     "dnf": false
+    },
+    "RUS": {
+     "grid": 2,
+     "pos": 20,
+     "dnf": true
+    },
+    "SAI": {
+     "grid": 22,
+     "pos": 12,
+     "dnf": false
+    },
+    "STR": {
+     "grid": 18,
+     "pos": 22,
+     "dnf": true
+    },
+    "VER": {
+     "grid": 1,
+     "pos": 1,
+     "dnf": false
+    }
    }
   },
   {
