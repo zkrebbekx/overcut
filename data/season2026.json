@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "synced_at": "2026-10-31T18:43:45.029120314Z",
+ "synced_at": "2026-10-31T19:24:03.381015188Z",
  "rounds": [
   {
    "round": 1,
@@ -8846,7 +8846,7 @@
     },
     {
      "gameday": 19,
-     "active": true,
+     "active": false,
      "price": 10.1,
      "old_price": 9.9,
      "ownership": 13,
@@ -18639,6 +18639,39 @@
       "total_dnf_dq_pts": 0,
       "value_for_money": 1.17,
       "top10_race_position_pts": 14,
+      "top8_sprint_position_pts": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "11167",
+   "kind": "driver",
+   "name": "Ryo Hirakawa",
+   "tla": "HIR",
+   "team_id": "26",
+   "team_name": "Haas F1 Team",
+   "history": [
+    {
+     "gameday": 19,
+     "active": true,
+     "price": 6,
+     "old_price": 0,
+     "ownership": 0,
+     "points": 0,
+     "quali_pts": 0,
+     "sprint_pts": 0,
+     "race_pts": 0,
+     "stats": {
+      "fastest_lap_pts": 0,
+      "dotd_pts": 0,
+      "overtaking_pts": 0,
+      "q3_finishes_pts": 0,
+      "total_position_pts": 0,
+      "total_position_gained_lost": 0,
+      "total_dnf_dq_pts": 0,
+      "value_for_money": 0,
+      "top10_race_position_pts": 0,
       "top8_sprint_position_pts": 0
      }
     }
