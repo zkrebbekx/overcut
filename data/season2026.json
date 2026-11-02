@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "synced_at": "2026-11-02T13:12:00.574762396Z",
+ "synced_at": "2026-11-02T22:22:33.031010854Z",
  "rounds": [
   {
    "round": 1,
@@ -3465,7 +3465,7 @@
    "race": {
     "ALB": {
      "grid": 16,
-     "pos": 14,
+     "pos": 11,
      "dnf": false
     },
     "ALO": {
@@ -3485,7 +3485,7 @@
     },
     "BOR": {
      "grid": 13,
-     "pos": 11,
+     "pos": 8,
      "dnf": false
     },
     "BOT": {
@@ -3495,17 +3495,17 @@
     },
     "COL": {
      "grid": 11,
-     "pos": 8,
+     "pos": 15,
      "dnf": false
     },
     "GAS": {
      "grid": 9,
-     "pos": 10,
+     "pos": 17,
      "dnf": false
     },
     "HAD": {
      "grid": 7,
-     "pos": 12,
+     "pos": 9,
      "dnf": false
     },
     "HAM": {
@@ -3516,17 +3516,17 @@
     },
     "HIR": {
      "grid": 18,
-     "pos": 13,
+     "pos": 10,
      "dnf": false
     },
     "HUL": {
      "grid": 10,
-     "pos": 16,
+     "pos": 14,
      "dnf": false
     },
     "LAW": {
      "grid": 22,
-     "pos": 9,
+     "pos": 7,
      "dnf": false
     },
     "LEC": {
@@ -3546,12 +3546,12 @@
     },
     "PER": {
      "grid": 20,
-     "pos": 17,
+     "pos": 16,
      "dnf": false
     },
     "PIA": {
      "grid": 12,
-     "pos": 7,
+     "pos": 13,
      "dnf": false
     },
     "RUS": {
@@ -3561,7 +3561,7 @@
     },
     "SAI": {
      "grid": 15,
-     "pos": 15,
+     "pos": 12,
      "dnf": false
     },
     "STR": {
