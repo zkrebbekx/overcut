@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "synced_at": "2026-11-07T23:33:02.709378485Z",
+ "synced_at": "2026-11-08T20:45:17.402020588Z",
  "rounds": [
   {
    "round": 1,
@@ -3582,7 +3582,7 @@
    "circuit_id": "interlagos",
    "date": "2026-11-08",
    "has_sprint": false,
-   "has_results": false,
+   "has_results": true,
    "sessions": {
     "FP1": "2026-11-06T15:30:00Z",
     "FP2": "2026-11-06T19:00:00Z",
@@ -3590,7 +3590,143 @@
     "Qualifying": "2026-11-07T18:00:00Z",
     "Race": "2026-11-08T17:00:00Z"
    },
-   "points_seen_at": "0001-01-01T00:00:00Z"
+   "points_seen_at": "2026-11-08T20:45:17.402020588Z",
+   "quali": {
+    "": 13,
+    "ALB": 10,
+    "ALO": 9,
+    "ANT": 3,
+    "BEA": 8,
+    "BOR": 22,
+    "BOT": 20,
+    "COL": 17,
+    "GAS": 18,
+    "HAD": 7,
+    "HAM": 11,
+    "HUL": 6,
+    "LAW": 5,
+    "LEC": 4,
+    "LIN": 14,
+    "NOR": 1,
+    "PER": 21,
+    "PIA": 12,
+    "RUS": 2,
+    "SAI": 15,
+    "STR": 19,
+    "VER": 16
+   },
+   "race": {
+    "": {
+     "grid": 0,
+     "pos": 20,
+     "dnf": false
+    },
+    "ALB": {
+     "grid": 0,
+     "pos": 15,
+     "dnf": false
+    },
+    "ALO": {
+     "grid": 0,
+     "pos": 12,
+     "dnf": false
+    },
+    "ANT": {
+     "grid": 0,
+     "pos": 5,
+     "dnf": false
+    },
+    "BEA": {
+     "grid": 0,
+     "pos": 17,
+     "dnf": false
+    },
+    "BOR": {
+     "grid": 0,
+     "pos": 16,
+     "dnf": false
+    },
+    "BOT": {
+     "grid": 0,
+     "pos": 22,
+     "dnf": true
+    },
+    "COL": {
+     "grid": 0,
+     "pos": 13,
+     "dnf": false
+    },
+    "GAS": {
+     "grid": 0,
+     "pos": 14,
+     "dnf": false
+    },
+    "HAD": {
+     "grid": 0,
+     "pos": 3,
+     "dnf": false
+    },
+    "HAM": {
+     "grid": 0,
+     "pos": 9,
+     "dnf": false
+    },
+    "HUL": {
+     "grid": 0,
+     "pos": 10,
+     "dnf": false
+    },
+    "LAW": {
+     "grid": 0,
+     "pos": 8,
+     "dnf": false
+    },
+    "LEC": {
+     "grid": 0,
+     "pos": 7,
+     "dnf": false
+    },
+    "LIN": {
+     "grid": 0,
+     "pos": 11,
+     "dnf": false
+    },
+    "NOR": {
+     "grid": 0,
+     "pos": 1,
+     "dnf": false
+    },
+    "PER": {
+     "grid": 0,
+     "pos": 18,
+     "dnf": false
+    },
+    "PIA": {
+     "grid": 0,
+     "pos": 6,
+     "dnf": false
+    },
+    "RUS": {
+     "grid": 0,
+     "pos": 4,
+     "dnf": false
+    },
+    "SAI": {
+     "grid": 0,
+     "pos": 19,
+     "dnf": false
+    },
+    "STR": {
+     "grid": 0,
+     "pos": 21,
+     "dnf": true
+    },
+    "VER": {
+     "grid": 0,
+     "pos": 2,
+     "dnf": false
+    }
+   }
   },
   {
    "round": 21,
@@ -4093,17 +4229,17 @@
      "price": 9,
      "old_price": 9.6,
      "ownership": 20,
-     "points": 0,
+     "points": 1,
      "quali_pts": 0,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 1,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 104,
       "q3_finishes_pts": 33,
       "total_position_pts": 75,
-      "total_position_gained_lost": -1,
+      "total_position_gained_lost": 0,
       "total_dnf_dq_pts": -40,
       "value_for_money": 0.77,
       "top10_race_position_pts": 40,
@@ -5033,19 +5169,19 @@
      "price": 5.4,
      "old_price": 6,
      "ownership": 10,
-     "points": 2,
-     "quali_pts": 0,
+     "points": -2,
+     "quali_pts": 2,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -4,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 109,
       "q3_finishes_pts": 2,
       "total_position_pts": 9,
-      "total_position_gained_lost": 54,
+      "total_position_gained_lost": 50,
       "total_dnf_dq_pts": -150,
-      "value_for_money": 0.2,
+      "value_for_money": 0.17,
       "top10_race_position_pts": 7,
       "top8_sprint_position_pts": 0
      }
@@ -5503,10 +5639,10 @@
      "price": 3,
      "old_price": 3,
      "ownership": 4,
-     "points": 0,
+     "points": -20,
      "quali_pts": 0,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -20,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
@@ -5514,8 +5650,8 @@
       "q3_finishes_pts": 0,
       "total_position_pts": 0,
       "total_position_gained_lost": 34,
-      "total_dnf_dq_pts": -280,
-      "value_for_money": -2.78,
+      "total_dnf_dq_pts": -300,
+      "value_for_money": -3.12,
       "top10_race_position_pts": 0,
       "top8_sprint_position_pts": 0
      }
@@ -5973,20 +6109,20 @@
      "price": 7.8,
      "old_price": 7.2,
      "ownership": 34,
-     "points": 5,
-     "quali_pts": 0,
+     "points": 0,
+     "quali_pts": 5,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -5,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 124,
       "q3_finishes_pts": 10,
-      "total_position_pts": 23,
-      "total_position_gained_lost": 17,
+      "total_position_pts": 24,
+      "total_position_gained_lost": 11,
       "total_dnf_dq_pts": -110,
-      "value_for_money": 0.35,
-      "top10_race_position_pts": 11,
+      "value_for_money": 0.31,
+      "top10_race_position_pts": 12,
       "top8_sprint_position_pts": 2
      }
     }
@@ -6443,19 +6579,19 @@
      "price": 5.8,
      "old_price": 6.4,
      "ownership": 33,
-     "points": 0,
+     "points": 3,
      "quali_pts": 0,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 3,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 113,
       "q3_finishes_pts": 8,
       "total_position_pts": 22,
-      "total_position_gained_lost": 20,
+      "total_position_gained_lost": 23,
       "total_dnf_dq_pts": -60,
-      "value_for_money": 0.82,
+      "value_for_money": 0.84,
       "top10_race_position_pts": 14,
       "top8_sprint_position_pts": 0
      }
@@ -6913,19 +7049,19 @@
      "price": 3,
      "old_price": 3,
      "ownership": 21,
-     "points": 0,
+     "points": 4,
      "quali_pts": 0,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 4,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 102,
       "q3_finishes_pts": 0,
       "total_position_pts": 0,
-      "total_position_gained_lost": 44,
+      "total_position_gained_lost": 48,
       "total_dnf_dq_pts": -110,
-      "value_for_money": 0.6,
+      "value_for_money": 0.67,
       "top10_race_position_pts": 0,
       "top8_sprint_position_pts": 0
      }
@@ -7383,10 +7519,10 @@
      "price": 3,
      "old_price": 3,
      "ownership": 19,
-     "points": 0,
+     "points": -20,
      "quali_pts": 0,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -20,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
@@ -7394,8 +7530,8 @@
       "q3_finishes_pts": 0,
       "total_position_pts": 0,
       "total_position_gained_lost": 18,
-      "total_dnf_dq_pts": -200,
-      "value_for_money": -2.22,
+      "total_dnf_dq_pts": -220,
+      "value_for_money": -2.55,
       "top10_race_position_pts": 0,
       "top8_sprint_position_pts": 0
      }
@@ -7853,20 +7989,20 @@
      "price": 24.7,
      "old_price": 24.4,
      "ownership": 26,
-     "points": 7,
-     "quali_pts": 0,
+     "points": 20,
+     "quali_pts": 7,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 13,
      "stats": {
       "fastest_lap_pts": 45,
       "dotd_pts": 30,
       "overtaking_pts": 93,
       "q3_finishes_pts": 136,
-      "total_position_pts": 381,
-      "total_position_gained_lost": -2,
+      "total_position_pts": 387,
+      "total_position_gained_lost": 5,
       "total_dnf_dq_pts": -40,
-      "value_for_money": 1.03,
-      "top10_race_position_pts": 211,
+      "value_for_money": 1.05,
+      "top10_race_position_pts": 217,
       "top8_sprint_position_pts": 34
      }
     }
@@ -8323,20 +8459,20 @@
      "price": 25,
      "old_price": 24.7,
      "ownership": 18,
-     "points": 0,
+     "points": 13,
      "quali_pts": 0,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 13,
      "stats": {
       "fastest_lap_pts": 25,
       "dotd_pts": 20,
       "overtaking_pts": 100,
       "q3_finishes_pts": 132,
-      "total_position_pts": 391,
-      "total_position_gained_lost": 5,
+      "total_position_pts": 393,
+      "total_position_gained_lost": 16,
       "total_dnf_dq_pts": -20,
-      "value_for_money": 1.04,
-      "top10_race_position_pts": 232,
+      "value_for_money": 1.07,
+      "top10_race_position_pts": 234,
       "top8_sprint_position_pts": 27
      }
     }
@@ -8793,19 +8929,19 @@
      "price": 5.6,
      "old_price": 6.2,
      "ownership": 51,
-     "points": 3,
-     "quali_pts": 0,
+     "points": -8,
+     "quali_pts": 3,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -11,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 116,
       "q3_finishes_pts": 4,
       "total_position_pts": 27,
-      "total_position_gained_lost": 31,
+      "total_position_gained_lost": 20,
       "total_dnf_dq_pts": -105,
-      "value_for_money": 0.62,
+      "value_for_money": 0.52,
       "top10_race_position_pts": 19,
       "top8_sprint_position_pts": 4
      }
@@ -9733,20 +9869,20 @@
      "price": 25.9,
      "old_price": 26,
      "ownership": 9,
-     "points": 10,
-     "quali_pts": 0,
+     "points": 35,
+     "quali_pts": 10,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 25,
      "stats": {
       "fastest_lap_pts": 30,
       "dotd_pts": 10,
       "overtaking_pts": 88,
       "q3_finishes_pts": 126,
-      "total_position_pts": 347,
+      "total_position_pts": 372,
       "total_position_gained_lost": 13,
       "total_dnf_dq_pts": -80,
-      "value_for_money": 0.79,
-      "top10_race_position_pts": 188,
+      "value_for_money": 0.84,
+      "top10_race_position_pts": 213,
       "top8_sprint_position_pts": 33
      }
     }
@@ -10203,20 +10339,20 @@
      "price": 23,
      "old_price": 23.3,
      "ownership": 9,
-     "points": 0,
+     "points": 12,
      "quali_pts": 0,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 12,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 10,
       "overtaking_pts": 115,
       "q3_finishes_pts": 95,
-      "total_position_pts": 239,
-      "total_position_gained_lost": -19,
+      "total_position_pts": 247,
+      "total_position_gained_lost": -15,
       "total_dnf_dq_pts": -60,
-      "value_for_money": 0.62,
-      "top10_race_position_pts": 123,
+      "value_for_money": 0.65,
+      "top10_race_position_pts": 131,
       "top8_sprint_position_pts": 21
      }
     }
@@ -10673,20 +10809,20 @@
      "price": 27.3,
      "old_price": 27.6,
      "ownership": 20,
-     "points": 9,
-     "quali_pts": 0,
+     "points": 24,
+     "quali_pts": 9,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 15,
      "stats": {
       "fastest_lap_pts": 20,
       "dotd_pts": 0,
       "overtaking_pts": 98,
       "q3_finishes_pts": 151,
-      "total_position_pts": 401,
-      "total_position_gained_lost": -13,
+      "total_position_pts": 413,
+      "total_position_gained_lost": -10,
       "total_dnf_dq_pts": -50,
-      "value_for_money": 0.84,
-      "top10_race_position_pts": 216,
+      "value_for_money": 0.86,
+      "top10_race_position_pts": 228,
       "top8_sprint_position_pts": 34
      }
     }
@@ -11143,20 +11279,20 @@
      "price": 27.5,
      "old_price": 27.4,
      "ownership": 37,
-     "points": 8,
-     "quali_pts": 0,
+     "points": 25,
+     "quali_pts": 8,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 17,
      "stats": {
-      "fastest_lap_pts": 80,
+      "fastest_lap_pts": 90,
       "dotd_pts": 30,
       "overtaking_pts": 93,
       "q3_finishes_pts": 159,
-      "total_position_pts": 539,
-      "total_position_gained_lost": 10,
+      "total_position_pts": 549,
+      "total_position_gained_lost": 7,
       "total_dnf_dq_pts": 0,
-      "value_for_money": 1.37,
-      "top10_race_position_pts": 349,
+      "value_for_money": 1.4,
+      "top10_race_position_pts": 359,
       "top8_sprint_position_pts": 31
      }
     }
@@ -11613,20 +11749,20 @@
      "price": 11.1,
      "old_price": 10.5,
      "ownership": 29,
-     "points": 6,
-     "quali_pts": 0,
+     "points": 5,
+     "quali_pts": 6,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -1,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 86,
       "q3_finishes_pts": 19,
-      "total_position_pts": 88,
-      "total_position_gained_lost": 58,
+      "total_position_pts": 92,
+      "total_position_gained_lost": 53,
       "total_dnf_dq_pts": -25,
-      "value_for_money": 1.1,
-      "top10_race_position_pts": 62,
+      "value_for_money": 1.09,
+      "top10_race_position_pts": 66,
       "top8_sprint_position_pts": 7
      }
     }
@@ -12083,19 +12219,19 @@
      "price": 10,
      "old_price": 10.6,
      "ownership": 43,
-     "points": 0,
+     "points": 7,
      "quali_pts": 0,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 7,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 100,
       "q3_finishes_pts": 22,
       "total_position_pts": 60,
-      "total_position_gained_lost": 33,
+      "total_position_gained_lost": 40,
       "total_dnf_dq_pts": -60,
-      "value_for_money": 0.67,
+      "value_for_money": 0.7,
       "top10_race_position_pts": 37,
       "top8_sprint_position_pts": 1
      }
@@ -12553,20 +12689,20 @@
      "price": 28.8,
      "old_price": 28.5,
      "ownership": 21,
-     "points": 0,
+     "points": 47,
      "quali_pts": 0,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 47,
      "stats": {
       "fastest_lap_pts": 20,
-      "dotd_pts": 90,
+      "dotd_pts": 100,
       "overtaking_pts": 127,
       "q3_finishes_pts": 112,
-      "total_position_pts": 373,
-      "total_position_gained_lost": 17,
+      "total_position_pts": 391,
+      "total_position_gained_lost": 36,
       "total_dnf_dq_pts": -65,
-      "value_for_money": 0.98,
-      "top10_race_position_pts": 241,
+      "value_for_money": 1.06,
+      "top10_race_position_pts": 259,
       "top8_sprint_position_pts": 20
      }
     }
@@ -13023,20 +13159,20 @@
      "price": 16.3,
      "old_price": 16.5,
      "ownership": 28,
-     "points": 4,
-     "quali_pts": 0,
+     "points": 21,
+     "quali_pts": 4,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 17,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 103,
       "q3_finishes_pts": 72,
-      "total_position_pts": 179,
-      "total_position_gained_lost": 15,
+      "total_position_pts": 194,
+      "total_position_gained_lost": 17,
       "total_dnf_dq_pts": -60,
-      "value_for_money": 0.86,
-      "top10_race_position_pts": 107,
+      "value_for_money": 0.92,
+      "top10_race_position_pts": 122,
       "top8_sprint_position_pts": 0
      }
     }
@@ -13493,19 +13629,19 @@
      "price": 8.4,
      "old_price": 8.2,
      "ownership": 22,
-     "points": 0,
+     "points": -7,
      "quali_pts": 0,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -7,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 122,
       "q3_finishes_pts": 2,
       "total_position_pts": 9,
-      "total_position_gained_lost": 41,
+      "total_position_gained_lost": 34,
       "total_dnf_dq_pts": -45,
-      "value_for_money": 0.76,
+      "value_for_money": 0.71,
       "top10_race_position_pts": 7,
       "top8_sprint_position_pts": 0
      }
@@ -13963,19 +14099,19 @@
      "price": 3.8,
      "old_price": 4,
      "ownership": 11,
-     "points": 1,
-     "quali_pts": 0,
+     "points": -5,
+     "quali_pts": 1,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -6,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 106,
       "q3_finishes_pts": 1,
       "total_position_pts": 6,
-      "total_position_gained_lost": 30,
+      "total_position_gained_lost": 24,
       "total_dnf_dq_pts": -130,
-      "value_for_money": 0.16,
+      "value_for_money": 0.08,
       "top10_race_position_pts": 5,
       "top8_sprint_position_pts": 0
      }
@@ -14433,20 +14569,20 @@
      "price": 34,
      "old_price": 34,
      "ownership": 35,
-     "points": 27,
-     "quali_pts": 0,
+     "points": 64,
+     "quali_pts": 27,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 37,
      "stats": {
-      "fastest_lap_pts": 100,
+      "fastest_lap_pts": 110,
       "dotd_pts": 0,
       "overtaking_pts": 191,
       "q3_finishes_pts": 310,
-      "total_position_pts": 940,
+      "total_position_pts": 962,
       "total_position_gained_lost": -3,
       "total_dnf_dq_pts": -50,
-      "value_for_money": 2.22,
-      "top10_race_position_pts": 565,
+      "value_for_money": 2.27,
+      "top10_race_position_pts": 587,
       "top8_sprint_position_pts": 65
      }
     }
@@ -14903,20 +15039,20 @@
      "price": 33,
      "old_price": 32.7,
      "ownership": 10,
-     "points": 15,
-     "quali_pts": 0,
+     "points": 57,
+     "quali_pts": 15,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 42,
      "stats": {
       "fastest_lap_pts": 30,
       "dotd_pts": 0,
       "overtaking_pts": 203,
       "q3_finishes_pts": 221,
-      "total_position_pts": 586,
-      "total_position_gained_lost": -6,
+      "total_position_pts": 619,
+      "total_position_gained_lost": -2,
       "total_dnf_dq_pts": -140,
-      "value_for_money": 1.43,
-      "top10_race_position_pts": 311,
+      "value_for_money": 1.49,
+      "top10_race_position_pts": 344,
       "top8_sprint_position_pts": 54
      }
     }
@@ -15373,20 +15509,20 @@
      "price": 33.3,
      "old_price": 33,
      "ownership": 8,
-     "points": 9,
-     "quali_pts": 0,
+     "points": 68,
+     "quali_pts": 9,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 59,
      "stats": {
       "fastest_lap_pts": 20,
       "dotd_pts": 0,
       "overtaking_pts": 252,
       "q3_finishes_pts": 190,
-      "total_position_pts": 572,
-      "total_position_gained_lost": 43,
+      "total_position_pts": 605,
+      "total_position_gained_lost": 64,
       "total_dnf_dq_pts": -130,
-      "value_for_money": 1.53,
-      "top10_race_position_pts": 362,
+      "value_for_money": 1.62,
+      "top10_race_position_pts": 395,
       "top8_sprint_position_pts": 20
      }
     }
@@ -15843,20 +15979,20 @@
      "price": 28.8,
      "old_price": 28.5,
      "ownership": 41,
-     "points": 12,
-     "quali_pts": 0,
+     "points": 43,
+     "quali_pts": 12,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 31,
      "stats": {
       "fastest_lap_pts": 70,
       "dotd_pts": 0,
       "overtaking_pts": 193,
       "q3_finishes_pts": 268,
-      "total_position_pts": 772,
-      "total_position_gained_lost": 3,
+      "total_position_pts": 780,
+      "total_position_gained_lost": 21,
       "total_dnf_dq_pts": -60,
-      "value_for_money": 2.19,
-      "top10_race_position_pts": 443,
+      "value_for_money": 2.25,
+      "top10_race_position_pts": 451,
       "top8_sprint_position_pts": 61
      }
     }
@@ -16313,17 +16449,17 @@
      "price": 18.2,
      "old_price": 18.5,
      "ownership": 7,
-     "points": -1,
-     "quali_pts": 0,
+     "points": 2,
+     "quali_pts": -1,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 3,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 211,
       "q3_finishes_pts": 43,
       "total_position_pts": 112,
-      "total_position_gained_lost": 31,
+      "total_position_gained_lost": 32,
       "total_dnf_dq_pts": -110,
       "value_for_money": 1.05,
       "top10_race_position_pts": 67,
@@ -16783,19 +16919,19 @@
      "price": 12.6,
      "old_price": 12,
      "ownership": 9,
-     "points": 6,
-     "quali_pts": 0,
+     "points": -5,
+     "quali_pts": 6,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -11,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 228,
       "q3_finishes_pts": 3,
       "total_position_pts": 15,
-      "total_position_gained_lost": 71,
+      "total_position_gained_lost": 58,
       "total_dnf_dq_pts": -175,
-      "value_for_money": 0.95,
+      "value_for_money": 0.91,
       "top10_race_position_pts": 12,
       "top8_sprint_position_pts": 0
      }
@@ -17253,19 +17389,19 @@
      "price": 4.5,
      "old_price": 5.1,
      "ownership": 3,
-     "points": 7,
-     "quali_pts": 0,
+     "points": -12,
+     "quali_pts": 7,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -19,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 188,
       "q3_finishes_pts": 2,
       "total_position_pts": 9,
-      "total_position_gained_lost": 88,
-      "total_dnf_dq_pts": -430,
-      "value_for_money": -1.16,
+      "total_position_gained_lost": 84,
+      "total_dnf_dq_pts": -450,
+      "value_for_money": -1.37,
       "top10_race_position_pts": 7,
       "top8_sprint_position_pts": 0
      }
@@ -17723,19 +17859,19 @@
      "price": 12.8,
      "old_price": 12.6,
      "ownership": 24,
-     "points": 8,
-     "quali_pts": 0,
+     "points": -10,
+     "quali_pts": 8,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -18,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 261,
       "q3_finishes_pts": 4,
       "total_position_pts": 35,
-      "total_position_gained_lost": 82,
+      "total_position_gained_lost": 62,
       "total_dnf_dq_pts": -125,
-      "value_for_money": 1.21,
+      "value_for_money": 1.14,
       "top10_race_position_pts": 27,
       "top8_sprint_position_pts": 4
      }
@@ -18193,20 +18329,20 @@
      "price": 11.6,
      "old_price": 11,
      "ownership": 21,
-     "points": 10,
-     "quali_pts": 0,
+     "points": 23,
+     "quali_pts": 10,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 13,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 237,
       "q3_finishes_pts": 18,
-      "total_position_pts": 45,
-      "total_position_gained_lost": 37,
+      "total_position_pts": 46,
+      "total_position_gained_lost": 34,
       "total_dnf_dq_pts": -180,
-      "value_for_money": 1.29,
-      "top10_race_position_pts": 25,
+      "value_for_money": 1.35,
+      "top10_race_position_pts": 26,
       "top8_sprint_position_pts": 2
      }
     }
@@ -18663,20 +18799,20 @@
      "price": 17.7,
      "old_price": 17.1,
      "ownership": 33,
-     "points": 11,
-     "quali_pts": 0,
+     "points": 27,
+     "quali_pts": 11,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": 16,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 202,
       "q3_finishes_pts": 41,
-      "total_position_pts": 149,
-      "total_position_gained_lost": 97,
+      "total_position_pts": 153,
+      "total_position_gained_lost": 99,
       "total_dnf_dq_pts": -90,
-      "value_for_money": 1.68,
-      "top10_race_position_pts": 100,
+      "value_for_money": 1.72,
+      "top10_race_position_pts": 104,
       "top8_sprint_position_pts": 8
      }
     }
@@ -19133,19 +19269,19 @@
      "price": 3,
      "old_price": 3,
      "ownership": 9,
-     "points": -1,
-     "quali_pts": 0,
+     "points": -17,
+     "quali_pts": -1,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -16,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 151,
       "q3_finishes_pts": 0,
       "total_position_pts": 0,
-      "total_position_gained_lost": 62,
-      "total_dnf_dq_pts": -310,
-      "value_for_money": -1.72,
+      "total_position_gained_lost": 66,
+      "total_dnf_dq_pts": -330,
+      "value_for_money": -1.98,
       "top10_race_position_pts": 0,
       "top8_sprint_position_pts": 0
      }
@@ -19656,19 +19792,19 @@
      "price": 6,
      "old_price": 0,
      "ownership": 0,
-     "points": 0,
+     "points": -9,
      "quali_pts": 0,
      "sprint_pts": 0,
-     "race_pts": 0,
+     "race_pts": -9,
      "stats": {
       "fastest_lap_pts": 0,
       "dotd_pts": 0,
       "overtaking_pts": 0,
       "q3_finishes_pts": 0,
       "total_position_pts": 0,
-      "total_position_gained_lost": 0,
+      "total_position_gained_lost": -9,
       "total_dnf_dq_pts": 0,
-      "value_for_money": 0,
+      "value_for_money": -1.5,
       "top10_race_position_pts": 0,
       "top8_sprint_position_pts": 0
      }
